@@ -1,4 +1,4 @@
-var React = require("React");
+var React = require("react");
 var ReactDOM = require("react-dom");
 var io = require('socket.io-client');
 var _ = require('lodash')
@@ -26,7 +26,7 @@ socket.on('connect', function() {
       loginPrompts = data;
       if(signUpPromts) {
         gotFields()
-        
+
 
       }
     })
@@ -38,7 +38,7 @@ socket.on('connect', function() {
         gotFields()
       }
     })
-    
+
   }
 })
 
@@ -47,9 +47,9 @@ function gotFields() {
 
     getInitialState() {
       return {login: true}
-    }, 
+    },
     handleSubmit(e) {
-      e.preventDefault();  
+      e.preventDefault();
     },
     componentDidMount() {
       socket.on('authenticated', function(data) {
@@ -59,7 +59,7 @@ function gotFields() {
       socket.on('unauthorized', function(data) {
         alert(data.message);
       })
-    }, 
+    },
     sendLogin() {
       var loginInfo = {type: (this.state.login ? "login" : "signup")}
       loginPrompts.forEach(function(key) {
@@ -90,7 +90,7 @@ function gotFields() {
 
 
       return (
-        <div> 
+        <div>
           <form onSubmit={this.handleSubmit}>
             {fields}
             <input type='submit' onClick={this.sendLogin} value={this.state.login ? "Login" : "Signup"}/>
@@ -133,12 +133,12 @@ var Panel = React.createClass({
     this.setState({
       pages: this.state.pages,
     })
-  }, 
+  },
   render() {
     var style = _.extend({
-      width: this.props.width, 
-      height: this.props.height, 
-      top: this.props.top, 
+      width: this.props.width,
+      height: this.props.height,
+      top: this.props.top,
       left: this.props.left,
       position: "absolute",
     }, this.props.style);
@@ -147,7 +147,7 @@ var Panel = React.createClass({
       return React.createElement(page.component, null);
     })
     return (
-      <div style={style}> 
+      <div style={style}>
         {pages}
       </div>
     )
@@ -221,7 +221,7 @@ var Messages = React.createClass({
         return;
       }
       if(currentChannel === data.channel) {
-        
+
         var event = chatter.pluginManager.fireEvent("MessageShowEvent", {message: event.message});
         if(event.result === Result.deny) {
           console.log("Message was canceled");
@@ -231,8 +231,8 @@ var Messages = React.createClass({
         self.setState({
           messages: messages.concat(event.message)
         })
-        
-      } 
+
+      }
     })
   },
   render() {
@@ -254,16 +254,16 @@ var SendMessage = React.createClass({
     this.textInput.value = "";
   },
   handleSubmit: function(e) {
-    e.preventDefault();  
+    e.preventDefault();
   },
   render() {
-    return ( 
-      <div> 
+    return (
+      <div>
         <form onSubmit={this.handleSubmit}>
           <input ref={(c) => this.textInput = c} />
           <input type='submit' onClick={this.sendMessage} value="Send"/>
         </form>
-      </div>         
+      </div>
 
     )
   }
@@ -283,9 +283,9 @@ var App = React.createClass({
     var self = this;
 
 
-    
-    
-  }, 
+
+
+  },
 
   getPanel(name) {
     if(name === "left") {
@@ -295,7 +295,7 @@ var App = React.createClass({
     } else if(name === "right") {
       return this.right;
     }
-  }, 
+  },
   render() {
     var testStyles = {
       panelLeft: {background: "#9E9E9E"},
@@ -343,7 +343,7 @@ var app;
 var onceAuthed = function() {
   app = ReactDOM.render(<App />, document.getElementById("app"))
   chatter.getPanel = app.getPanel;
-  
+
   chatter.getPanel('left').addPage(new Page(1, ChannelList));
   chatter.getPanel('center').addPage(new Page(1, Messages));
   chatter.getPanel('center').addPage(new Page(2, SendMessage));

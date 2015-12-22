@@ -1,17 +1,15 @@
 var express = require("express");
 var app = express();
-var jwt = require('jsonwebtoken');
 
 var http = require('http').Server(app);
-var bodyParser = require('body-parser')
 var io = require('socket.io')(http);
 var message = require('./client/message');
 var pm = require('./pluginManager');
 var Result = pm.Result;
 var pluginManager =  this.pluginManager = pm(this);
-var Channel = require("./Channel").channel;
-var User = require('./User').User;
-var Auth = require('./Auth').Auth;
+var Channel = require("./channel").channel;
+var User = require('./user').User;
+var Auth = require('./auth').Auth;
 
 var jwtSecret = 'secretsss';
 
@@ -170,11 +168,11 @@ require('socketio-auth')(io, {
     }
     console.log(resultData)
     if(resultData.success) {
-      return callback(null, resultData.profile); 
+      return callback(null, resultData.profile);
     } else {
      return callback(new Error(resultData.error))
     }
-  }, 
+  },
   postAuthenticate: function(socket, data, profile) {
     var user = getUser(profile.username);
     if(!user) {
@@ -205,7 +203,7 @@ require('socketio-auth')(io, {
     socket.on('message', function(message) {
       //Receive message
       console.log(message.channel + " " + message.text);
-      sendMessage(connection.user, getChannel(message.channel), message.text); 
+      sendMessage(connection.user, getChannel(message.channel), message.text);
     });
 
 
@@ -234,25 +232,25 @@ require('socketio-auth')(io, {
 })
 
 io.on('connection', function(socket) {
-  
-  
 
-  
-  
-  
+
+
+
+
+
   socket.emit("LoginFields", auth.clientLoginFields())
   socket.emit("SignupFields", auth.clientSignupFields())
 
   //sendChannels(socket)
 
-  
+
 
   socket.on('getPlugins', function(data, callback) {
     var fs = require("fs");
     fs.readdir("client/plugins", function(err, data) {
       var obj = {};
       for(var i = 0; i < data.length; i++) {
-        var parsed = JSON.parse(fs.readFileSync("client/plugins/"+data[i] + "/plugin.json")); 
+        var parsed = JSON.parse(fs.readFileSync("client/plugins/"+data[i] + "/plugin.json"));
         obj[data[i]] = parsed;
       }
       socket.emit("getPlugins", obj);

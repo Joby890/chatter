@@ -4,7 +4,7 @@ var webpack = require('webpack');
 var CODE = __dirname+'/server/client';
 var React = require('react');
 
-makeIndex();
+//makeIndex();
 
 module.exports = {
 
@@ -27,12 +27,12 @@ module.exports = {
     ]
   },
 
-    resolve: {
+  resolve: {
     alias: {
       'react': path.join(__dirname, 'node_modules', 'react')
     },
     extensions: ['', '.js']
-  }, 
+  },
 
   plugins: [
     new webpack.optimize.CommonsChunkPlugin('shared.js')
@@ -40,22 +40,6 @@ module.exports = {
 
 };
 
-function makeIndex () {
-  var list = fs.readdirSync(CODE).filter(function(dir) {
-    return isDirectory(path.join(CODE, dir));
-  }).map(function (dir) {
-    return React.DOM.li({}, React.DOM.a({href: '/'+dir}, dir.replace(/-/g, ' ')));
-  });
-  var markup = React.renderToStaticMarkup((
-    React.DOM.html({},
-      React.DOM.link({rel: 'stylesheet', href: '/shared.css'}),
-      React.DOM.body({id: "index"},
-        React.DOM.ul({}, list)
-      )
-    )
-  ));
-  fs.writeFileSync('./server/index.html', markup);
-}
 
 function isDirectory(dir) {
   return fs.lstatSync(dir).isDirectory();

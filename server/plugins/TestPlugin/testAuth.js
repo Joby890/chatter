@@ -1,5 +1,5 @@
 'use strict'
-var Auth = require('./../../Auth').Auth;
+var Auth = require('./../../auth').Auth;
 
 var users = {
   "joe": "password"

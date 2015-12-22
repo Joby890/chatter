@@ -1,1 +1,3 @@
 node_modules/
+/server/client/bundles.js
+/server/client/bundle.js
