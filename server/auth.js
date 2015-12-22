@@ -8,6 +8,14 @@ class Auth {
     return false;
   }
 
+  clientLoginFields() {
+    return ["username"];
+  }
+
+  clientSignupFields() {
+    return ["username"];
+  }
+
   start() {
 
   }

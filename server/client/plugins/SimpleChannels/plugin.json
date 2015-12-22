@@ -1,0 +1,6 @@
+{
+  "name": "SimpleChannels",
+  "author": "Joe Brumaghim",
+  "description": "A Simple Plugin to manager and add channels to your chatter",
+  "main": "sc.js"
+}

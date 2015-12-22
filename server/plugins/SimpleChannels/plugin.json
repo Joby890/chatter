@@ -1,0 +1,6 @@
+{
+  "name": "SimpleChannels",
+  "author": "Joe Brumaghim",
+  "description": "A Simple Plugin to manage channels in chatter",
+  "main": "simplechannels.js"
+}

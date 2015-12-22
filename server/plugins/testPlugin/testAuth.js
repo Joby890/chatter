@@ -1,6 +1,9 @@
 'use strict'
 var Auth = require('./../../Auth').Auth;
 
+var users = {
+  "joe": "password"
+};
 
 class TestAuth extends Auth {
   constructor() {
@@ -11,17 +14,31 @@ class TestAuth extends Auth {
     return true;
   }
 
+  clientLoginFields() {
+    return ["username", "password"];
+  }
+
+  clientSignupFields() {
+    return ["email", "username", "password"];
+  }
+
   authLogin(data) {
-    if(data.username === "Doug") {
-      return {success: false, error: "no dougs allowed"}
+    if(users[data.username] === data.password) {
+      chatter.createUser(data.username);
+      return {success: true, profile: {username: data.username}};
+    } else {
+      return {success: false, error: "invalid password or unknown username"}
     }
-    var profile = {
-      username: data.username,
-      
-      id: 123
-    };
-    chatter.createUser(data.username);
-    return {success: true, profile: profile};
+  }
+
+  authSignup(data) {
+    if(!users[data.username]) {
+      users[data.username] = data.password;
+      chatter.createUser(data.username);
+      return {success: true, profile: {username: data.username}};
+    } else {
+      return {success: false, error: "Username already in use"}
+    }
   }
 }
 

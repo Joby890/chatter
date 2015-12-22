@@ -2,15 +2,28 @@
 class PluginManager {
   constructor(chatter, socket) {
     this.events = {};
-    var plugins = [];
-    var fs = require("fs");
+    this.plugins = [];
+    //var fs = require("fs");
     window.Plugin = Plugin;
+    
+
+  }
+  getPlugin(name) {
+    for(var i = 0; i < this.plugins.length; i++) {
+      if(this.plugins[i].name === name) {
+        return this.plugins[i];
+      }
+    }
+  }
+  initialize(socket) {
+    var self = this;
     var addPlugin = function(dir, data) {
       console.log("Loading: " + data.name)
+
       System.import(dir).then(function(module) {
         var classplugin = module.default;
         var obj = new classplugin(chatter);
-        plugins.push(new Plugin(data.name, data.author, data.description, obj));
+        self.plugins.push(new Plugin(data.name, data.author, data.description, obj));
 
       });
       // var module = require(dir);
@@ -19,13 +32,6 @@ class PluginManager {
       // plugins.push(createPlugin);
     }
 
-    this.getPlugin = function(name) {
-      for(var i = 0; i < plugins.length; i++) {
-        if(plugins[i].name === name) {
-          return plugins[i];
-        }
-      }
-    }
     var load = function(name, data, all) {
       if(!self.getPlugin(data.name)) {
         if(data.depend) {
@@ -40,7 +46,6 @@ class PluginManager {
       }
 
     }
-    var self = this;
     socket.on('getPlugins', function(result) {
       for(var key in result) {
         var data = result[key];
@@ -48,7 +53,6 @@ class PluginManager {
       }
     })
     socket.emit('getPlugins', {});
-
   }
 
 
@@ -128,7 +132,7 @@ class Result {
     }
   }
 }
-
+window.Result = Result;
 var deny = new Result("DENY",0);
 var allow = new Result("ALLOW", 2);
 var def = new Result("DEFAULT", 1);

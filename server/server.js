@@ -34,15 +34,27 @@ var connections = [];
 var auth;
 
 
+var sevents = [];
+var listenToAll = chatter.listenToAll = function(name, callback) {
+  //Tell all sockets already connected to listen to this event
+  connections.forEach(function(connection) {
+    connection.socket.on(name, callback);
+  })
+  sevents.push({name: name, callback: callback});
 
+}
 
 var createChannel = chatter.createChannel = function(name) {
+  if(channels[name] !== undefined) {
+    return;
+  }
   var event = pluginManager.fireEvent("CreateChannelEvent", {name: name});
   if(event.result === Result.deny) {
     console.log(event.name + " was canceled");
     return;
   }
   channels[event.name] = new Channel(event.name);
+  sendChannels();
 }
 
 var getChannel = chatter.getChannel = function(name) {
@@ -132,8 +144,8 @@ var sendChannels = function(socket) {
   if(socket) {
     socket.emit("channels", {channels: channels})
   } else {
-    for(var i = 0; i < sockets.length; i++) {
-      sendChannels(connection[i].socket);
+    for(var i = 0; i < connections.length; i++) {
+      sendChannels(connections[i].socket);
     }
   }
 }
@@ -145,9 +157,18 @@ createChannel('random');
 createUser('joe').name = "joe"
 createUser('chatterbot')
 
+
+
+
 require('socketio-auth')(io, {
   authenticate: function (socket, data, callback) {
-    var resultData = auth.authLogin(data);
+    var resultData;
+    if(data.type === "login") {
+      resultData = auth.authLogin(data);
+    } else {
+      resultData = auth.authSignup(data);
+    }
+    console.log(resultData)
     if(resultData.success) {
       return callback(null, resultData.profile); 
     } else {
@@ -159,6 +180,8 @@ require('socketio-auth')(io, {
     if(!user) {
       console.log("Unable to find user from authed");
     }
+    var connection = {user: null, socket: socket};
+    socket.connection = connection;
     socket.connection.user = user;
     var event = pluginManager.fireEvent("UserConnectEvent", {data: data, user: user});
     if(event.result === Result.deny) {
@@ -167,47 +190,62 @@ require('socketio-auth')(io, {
       socket.disconnect();
       return;
     }
+    sendChannels(socket);
+    connections.push(connection);
+    //once authtificated then listen to events and add to connection
+
+
+
+    //Tell socket to listen to global events
+    sevents.forEach(function(sevent) {
+      socket.on(sevent.name, sevent.callback);
+    })
+
+    //Listen for messages from socket
+    socket.on('message', function(message) {
+      //Receive message
+      console.log(message.channel + " " + message.text);
+      sendMessage(connection.user, getChannel(message.channel), message.text); 
+    });
+
+
+    socket.on('getMessages', function(data) {
+      var channel = channels[data.channel];
+      if(channel) {
+        for(var i = 0; i < channel.messages.length; i++) {
+          sendConnMessage(channel.messages[i], connection);
+        }
+      }
+
+    })
+
+    socket.on('disconnect', function(data) {
+      var event = pluginManager.fireEvent("UserDisconnectEvent", {user: connection.user});
+      connection.socket.connection = null;
+      connections.splice(connection, 1)
+    })
+
+    socket.on('channels', function() {
+      sendChannels(socket);
+    })
+
+
   }
 })
 
 io.on('connection', function(socket) {
-  var connection = {user: null, socket: socket};
-  socket.connection = connection;
+  
+  
 
-  sendChannels(socket)
- 
-  connections.push(connection);
+  
+  
+  
+  socket.emit("LoginFields", auth.clientLoginFields())
+  socket.emit("SignupFields", auth.clientSignupFields())
 
+  //sendChannels(socket)
 
-
-  //Listen for messages from socket
-  socket.on('message', function(message) {
-    //Receive message
-    console.log(message.channel + " " + message.text);
-    //TODO not take message user but connection user
-    sendMessage(getUser(message.user), getChannel(message.channel), message.text); 
-  });
-
-
-  socket.on('getMessages', function(data) {
-    var channel = channels[data.channel];
-    if(channel) {
-      for(var i = 0; i < channel.messages.length; i++) {
-        sendConnMessage(channel.messages[i], connection);
-      }
-    }
-
-  })
-
-  socket.on('disconnect', function(data) {
-    var event = pluginManager.fireEvent("UserDisconnectEvent", {user: connection.user});
-    connection.socket.connection = null;
-    connections.splice(connection, 1)
-  })
-
-  socket.on('channels', function() {
-    sendChannels(socket);
-  })
+  
 
   socket.on('getPlugins', function(data, callback) {
     var fs = require("fs");
@@ -218,10 +256,6 @@ io.on('connection', function(socket) {
         obj[data[i]] = parsed;
       }
       socket.emit("getPlugins", obj);
-      
-      console.log("Got plugins request ",obj)
     })
-
-    
   })
 });
