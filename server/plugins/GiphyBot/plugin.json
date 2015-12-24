@@ -1,0 +1,6 @@
+{
+  "name": "GiphyBot",
+  "author": "Joe Brumaghim",
+  "description": "A Bot for giphys",
+  "main": "giphy.js"
+}

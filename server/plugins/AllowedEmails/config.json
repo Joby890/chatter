@@ -1,0 +1,5 @@
+{
+  "allowed": "hackreactor.com",
+  "errorMessage": "Only hackreactor emails are allowed",
+  "enabled": false
+}

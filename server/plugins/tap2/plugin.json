@@ -1,7 +1,0 @@
-{
-  "name": "TestPlugin2",
-  "author": "Joe Brumaghim",
-  "description": "A Test Plugin",
-  "main": "testPlugin.js",
-  "depend": ["TestPlugin"]
-}

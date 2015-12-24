@@ -61,10 +61,18 @@ function gotFields() {
       })
     },
     sendLogin() {
-      var loginInfo = {type: (this.state.login ? "login" : "signup")}
-      loginPrompts.forEach(function(key) {
-        loginInfo[key] = this[key].value;
-      })
+      var login = this.state.login;
+      var loginInfo = {type: (login ? "login" : "signup")}
+      if(login) {
+        loginPrompts.forEach(function(key) {
+          loginInfo[key] = this[key].value;
+        })
+        
+      } else {
+        signUpPromts.forEach(function(key) {
+          loginInfo[key] = this[key].value;
+        })
+      }
 
       socket.emit('authentication', loginInfo);
 
@@ -141,13 +149,14 @@ var Panel = React.createClass({
       top: this.props.top,
       left: this.props.left,
       position: "absolute",
+      overflow: "auto",
     }, this.props.style);
 
     var pages = this.state.pages.map(function(page) {
       return React.createElement(page.component, null);
     })
     return (
-      <div style={style}>
+      <div className="test" style={style}>
         {pages}
       </div>
     )
@@ -228,8 +237,9 @@ var Messages = React.createClass({
           return;
         }
         console.log("Adding message ", event.message)
+        messages.push(event.message)
         self.setState({
-          messages: messages.concat(event.message)
+          messages: messages
         })
 
       }
@@ -237,7 +247,7 @@ var Messages = React.createClass({
   },
   render() {
     var messages = this.state.messages.map(function(message) {
-      return ( <div> <span> {message.user}: </span> <span> {message.text} </span></div>);
+      return ( <div> <span> {message.user}: </span> <div> {message.text} </div></div>);
     })
     return (
       <div>
@@ -306,7 +316,7 @@ var App = React.createClass({
     return (
       <div>
         <Panel style={testStyles.panelLeft} top="0" left="0"  width="200" height={window.innerHeight} ref={(comp) => this.left = comp}>  </Panel>
-        <Panel style={testStyles.panelCenter} top="0" left="200"  width={window.innerWidth - 500 -200} height={window.innerHeight} ref={(comp) => this.center = comp}>  </Panel>
+        <Panel style={testStyles.panelCenter} top="0" left="200"  width={window.innerWidth - 500 -200} height={window.innerHeight * .9} ref={(comp) => this.center = comp}>  </Panel>
         <Panel style={testStyles.panelRight} top="0" left={window.innerWidth - 500}  width="500" height={window.innerHeight} ref={(comp) => this.right = comp}>  </Panel>
       </div>
       )

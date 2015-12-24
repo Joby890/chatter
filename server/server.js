@@ -1,6 +1,7 @@
 var express = require("express");
 var app = express();
 
+var req = require('request');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var message = require('./client/message');
@@ -10,7 +11,8 @@ var pluginManager =  this.pluginManager = pm(this);
 var Channel = require("./channel").channel;
 var User = require('./user').User;
 var Auth = require('./auth').Auth;
-
+var Config = require("./config").Config
+var _ = require('lodash');
 var jwtSecret = 'secretsss';
 
 app.use(express.static(__dirname + '/client'));
@@ -30,6 +32,21 @@ var users = {};
 var connections = [];
 //Auth system currently being used
 var auth;
+
+
+var request = chatter.request = function(options, callback) {
+  req("http://"+options.host+options.path, function(err, response, body) {
+    callback(JSON.parse(body));
+  })
+}
+
+
+//current operation is O(n) n is all users which can become costly operations
+var getOnlineUsers = chatter.getOnlineUsers = function() {
+  return _.filter(users, function(user, key) {
+    return user.isOnline();
+  })
+}
 
 
 var sevents = [];
@@ -78,6 +95,10 @@ var getUser = chatter.getUser = function(name) {
   return users[name];
 }
 
+var loadConfig = chatter.loadConfig = function(f) {
+  return new Config(f);
+}
+
 var getPlugin = chatter.getPlugin = function(name) {
   return pluginManager.getPlugin(name);
 }
@@ -122,13 +143,14 @@ var sendMessage = chatter.sendMessage = function(user, channel, text) {
 }
 
 //Send a message to a client connected as a user
-var sendConnMessage = chatter.sendConnMessage = function(message, conn) {
+var sendConnMessage = function(message, conn) {
   if(!conn.user) {
     console.log("Unknow user attempting to get message!");
     return;
   }
+  //Clone message to allow for modifications
   var localMessage = JSON.parse(JSON.stringify(message));
-  //Global plugins notify
+
   var event = pluginManager.fireEvent("UserMessageSendEvent", {message: localMessage, username: conn.user.name})
   if(event.result === Result.deny) {
     console.log("event was canceled!")
@@ -160,6 +182,12 @@ createUser('chatterbot')
 
 require('socketio-auth')(io, {
   authenticate: function (socket, data, callback) {
+    var event = pluginManager.fireEvent("UserPreAuthenticateEvent", {data: data});
+    if(event.result === Result.deny) {
+      console.log(event)
+      return callback(new Error(event.errorMessage));
+    }
+
     var resultData;
     if(data.type === "login") {
       resultData = auth.authLogin(data);
@@ -177,6 +205,7 @@ require('socketio-auth')(io, {
     var user = getUser(profile.username);
     if(!user) {
       console.log("Unable to find user from authed");
+      console.log("This is likely an error from auth not returning a username to match too. In the future this may result in disconnecting user")
     }
     var connection = {user: null, socket: socket};
     socket.connection = connection;
@@ -188,6 +217,7 @@ require('socketio-auth')(io, {
       socket.disconnect();
       return;
     }
+    user.setOnline(true);
     sendChannels(socket);
     connections.push(connection);
     //once authtificated then listen to events and add to connection
@@ -202,6 +232,7 @@ require('socketio-auth')(io, {
     //Listen for messages from socket
     socket.on('message', function(message) {
       //Receive message
+      //Need to catch error here
       console.log(message.channel + " " + message.text);
       sendMessage(connection.user, getChannel(message.channel), message.text);
     });
@@ -218,6 +249,7 @@ require('socketio-auth')(io, {
     })
 
     socket.on('disconnect', function(data) {
+      connection.user.setOnline(false);
       var event = pluginManager.fireEvent("UserDisconnectEvent", {user: connection.user});
       connection.socket.connection = null;
       connections.splice(connection, 1)

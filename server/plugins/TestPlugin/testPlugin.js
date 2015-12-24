@@ -20,4 +20,10 @@ module.exports = function(chatter) {
 
   var testAuth = require('./testAuth').TestAuth;
   chatter.setAuth(new testAuth());
+
+
+
+  setInterval(function() {
+    //console.log(chatter.getOnlineUsers())
+  }, 5000)
 }
