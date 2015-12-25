@@ -10,21 +10,18 @@ var socket;
 //Connect to chatter server
 socket = io();
 console.log(socket)
-
+var hasAuthed = false;
 var loginPrompts;
 var signUpPromts;
 //listen for connect and get login fields and signup fields
 socket.on('connect', function() {
   //If we already have the prompts no need to listen for them
   console.log("connected")
-  console.log(loginPrompts)
-  console.log(signUpPromts)
-  console.log(!loginPrompts && !signUpPromts)
   if(!loginPrompts && !signUpPromts) {
     socket.on('LoginFields', function(data) {
       console.log("Got login fiels", data)
       loginPrompts = data;
-      if(signUpPromts) {
+      if(signUpPromts && !hasAuthed) {
         gotFields()
 
 
@@ -34,7 +31,7 @@ socket.on('connect', function() {
     socket.on('SignupFields', function(data) {
       console.log("Got signup fiels", data)
       signUpPromts = data;
-      if(loginPrompts) {
+      if(loginPrompts && !hasAuthed) {
         gotFields()
       }
     })
@@ -55,6 +52,7 @@ function gotFields() {
       socket.on('authenticated', function(data) {
         console.log("Authed")
         onceAuthed();
+        //hasAuthed = true;
       })
       socket.on('unauthorized', function(data) {
         alert(data.message);
@@ -136,6 +134,12 @@ var Panel = React.createClass({
     return this.state.pages.indexOf(page) >= 0;
   },
 
+  updatePage(id) {
+    this.setState({
+      pages: this.state.pages,
+    })
+  },
+
   removePage(page) {
     this.state.pages.splice(page, 1);
     this.setState({
@@ -208,6 +212,36 @@ var Messages = React.createClass({
     return {messages: []};
   },
 
+
+  handleMessage(message) {
+    var self = this;
+    var messages;
+    if(self.state && self.state.messages) {
+      messages = self.state.messages;
+    } else {
+      messages = [];
+    }
+    var event = chatter.pluginManager.fireEvent("MessageRecievedEvent", {message: message});
+    if(event.result === Result.deny) {
+      console.log("Message was canceled");
+      return;
+    }
+    if(currentChannel === event.message.channel) {
+
+      var event = chatter.pluginManager.fireEvent("MessageShowEvent", {message: event.message});
+      if(event.result === Result.deny) {
+        console.log("Message was canceled");
+        return;
+      }
+      console.log("Adding message ", event.message)
+      messages.push(event.message)
+      self.setState({
+        messages: messages
+      })
+
+    }
+  },
+
   componentDidMount() {
     var self = this;
     chatter.pluginManager.registerEvent("ChannelChangeEvent", function(event) {
@@ -217,31 +251,10 @@ var Messages = React.createClass({
       })
     })
 
-    socket.on("message", function(data) {
-      var messages;
-      if(self.state && self.state.messages) {
-        messages = self.state.messages;
-      } else {
-        messages = [];
-      }
-      var event = chatter.pluginManager.fireEvent("MessageRecievedEvent", {message: data});
-      if(event.result === Result.deny) {
-        console.log("Message was canceled");
-        return;
-      }
-      if(currentChannel === data.channel) {
-
-        var event = chatter.pluginManager.fireEvent("MessageShowEvent", {message: event.message});
-        if(event.result === Result.deny) {
-          console.log("Message was canceled");
-          return;
-        }
-        console.log("Adding message ", event.message)
-        messages.push(event.message)
-        self.setState({
-          messages: messages
-        })
-
+    socket.on("message", this.handleMessage)
+    socket.on('messages', function(messages) {
+      for(var i = 0; i < messages.length; i++) {
+        this.handleMessage(messages[i]);
       }
     })
   },
@@ -292,9 +305,6 @@ var App = React.createClass({
   componentDidMount: function() {
     var self = this;
 
-
-
-
   },
 
   getPanel(name) {
@@ -304,6 +314,8 @@ var App = React.createClass({
       return this.center;
     } else if(name === "right") {
       return this.right;
+    } else if(name === "bottom") {
+      return this.bottom;
     }
   },
   render() {
@@ -311,6 +323,7 @@ var App = React.createClass({
       panelLeft: {background: "#9E9E9E"},
       panelCenter: {background: "#fff"},
       panelRight: {background: "#eee"},
+      panelBottom: {background: "#ee9"},
     }
 
     return (
@@ -318,6 +331,7 @@ var App = React.createClass({
         <Panel style={testStyles.panelLeft} top="0" left="0"  width="200" height={window.innerHeight} ref={(comp) => this.left = comp}>  </Panel>
         <Panel style={testStyles.panelCenter} top="0" left="200"  width={window.innerWidth - 500 -200} height={window.innerHeight * .9} ref={(comp) => this.center = comp}>  </Panel>
         <Panel style={testStyles.panelRight} top="0" left={window.innerWidth - 500}  width="500" height={window.innerHeight} ref={(comp) => this.right = comp}>  </Panel>
+        <Panel style={testStyles.panelBottom} top={window.innerHeight *.9} left="200" width={window.innerWidth - 500 -200} height={window.innerHeight * .1} ref={(comp) => this.bottom  = comp}> </Panel>
       </div>
       )
   }
@@ -328,7 +342,8 @@ var App = React.createClass({
 
 
 class Page {
-  constructor(weight, component) {
+  constructor(weight, component, id) {
+    this.id = id;
     this.weight = weight;
     this.component = component;
   }
@@ -354,11 +369,13 @@ var onceAuthed = function() {
   app = ReactDOM.render(<App />, document.getElementById("app"))
   chatter.getPanel = app.getPanel;
 
-  chatter.getPanel('left').addPage(new Page(1, ChannelList));
+  chatter.getPanel('left').addPage(new Page(1, ChannelList, 'channellist'));
   chatter.getPanel('center').addPage(new Page(1, Messages));
-  chatter.getPanel('center').addPage(new Page(2, SendMessage));
+  chatter.getPanel('bottom').addPage(new Page(2, SendMessage));
   //Let plugins know that we have offically authed with the server
   var event = chatter.pluginManager.fireEvent("AfterAuthEvent", {});
+  //Once we have finished authed load messages from currernt channel
+  socket.emit('getMessages', {channel: chatter.getCurrentChannel()});
 
 
 }
@@ -367,7 +384,7 @@ chatter.getCurrentChannel = function() {
   return currentChannel;
 }
 
-chatter.update = function() {
+chatter.forceUpdate = function() {
   app.forceUpdate();
 }
 

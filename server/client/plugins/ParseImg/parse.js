@@ -10,7 +10,17 @@ export default function(chatter) {
       }
 
     }  catch(e) {
+      //not json check if message is linkable
+      if(isUrl(event.message.text)){
+        event.message.text = React.createElement("a", {href:event.message.text, target:"_blank"}, event.message.text);
+      }
 
     }
   })
+}
+
+
+function isUrl(s) {
+   var regexp = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
+   return regexp.test(s);
 }

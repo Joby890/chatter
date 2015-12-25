@@ -10,15 +10,13 @@ export default function(chatter) {
     } else {
       unreadCount[channel] = 0;
     }
-    console.log(unreadCount)
-    chatter.update();
+    chatter.getPanel('left').updatePage('channellist');
 
   });
 
   chatter.pluginManager.registerEvent("ChannelRenderEvent", function(event) {
     if(unreadCount[event.name]) {
-      event.name = event.name + " (" + unreadCount[event.name] + ")";
-      
+      event.name = event.name + " (" + unreadCount[event.name] + ")"; 
     }
   });
 }
