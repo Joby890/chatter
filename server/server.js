@@ -194,9 +194,13 @@ var sendChannels = function(socket) {
 //Listen for plugins finish loading events
 pluginManager.registerEvent("PluginsFinishedLoadingEvent", function(event) {
   //load all channels, users, messages
-  storage.loadChannels();
-  storage.loadUsers();
-  storage.loadMessages();
+  storage.loadChannels(function() {
+    storage.loadUsers(function() {
+      storage.loadMessages();
+
+    });
+
+  });
 })
 createChannel('general');
 createChannel('random');
@@ -316,11 +320,12 @@ var shutdown = function(done) {
 
   storage.saveChannels(channels, d);
   storage.saveUsers(users, d);
-  var messages = [];
-  for(var i = 0; i < channels.length; i++) {
-    messages.concat(channels[i].messages);
-  }
-  storage.saveMessages(messages,d);
+  var mess = [];
+  _.each(channels, function(channel) {
+    mess = mess.concat(channel.messages);
+
+  })
+  storage.saveMessages(mess,d);
 
   setTimeout(function() {
     count = 3;

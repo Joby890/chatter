@@ -4,8 +4,8 @@ class Storage {
     this.name = name;
   }
 
-  loadUsers() {
-
+  loadUsers(done) {
+    done()
   }
 
   saveUsers(users, done) {
@@ -14,15 +14,14 @@ class Storage {
 
 
   loadMessages() {
-
   }
 
   saveMessages(messages, done) {
     done()
   }
 
-  loadChannels() {
-
+  loadChannels(done) {
+    done()
   }
 
   saveChannels(channels, done) {
