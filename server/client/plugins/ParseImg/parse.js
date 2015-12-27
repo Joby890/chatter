@@ -1,4 +1,5 @@
 export default function(chatter) {
+  console.log(URI)
   chatter.pluginManager.registerEvent("MessageShowEvent", function(event) {
     try{
       var text = event.message.text;
@@ -6,21 +7,36 @@ export default function(chatter) {
       console.log(obj)
       if(obj.type === "img") {
         event.message.text = React.createElement("img", {src: obj.src});
-        
+
       }
 
     }  catch(e) {
+      //http://github.com string1 http://google.com s25a http://test.com http://why.com sdsads asddsa http://workshub.com
       //not json check if message is linkable
-      if(isUrl(event.message.text)){
-        event.message.text = React.createElement("a", {href:event.message.text, target:"_blank"}, event.message.text);
+      var results = [];
+      var text = event.message.text;
+      var last = 0;
+      var found = false;
+      var result = URI.withinString(text, function(url, start, end) {
+        found = true;
+        if(last !== start) {
+          results.push(text.substring(last, start));
+        }
+        results.push(React.createElement("a", {href:url, target:"_blank"}, url));
+        last = end;
+        return url;
+      });
+      results.push(text.substring(last, text.length))
+      if(found) {
+        var end = results.map(function(current) {
+          if(typeof current === "string") {
+            return React.createElement("span", null, current);
+          } else {
+            return current;
+          }
+        });
+        event.message.text = React.createElement("div", null, end);
       }
-
     }
   })
-}
-
-
-function isUrl(s) {
-   var regexp = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
-   return regexp.test(s);
 }
