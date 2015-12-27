@@ -1,9 +1,10 @@
 'use strict'
 class Message {
-  constructor(channel, text,  user) {
+  constructor(channel, text,  user, id) {
     this.channel = channel;
     this.text = text;
     this.user = user;
+    this.id = id;
   }
 }
 

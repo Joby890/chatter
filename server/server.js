@@ -122,11 +122,13 @@ setAuth(new Auth("default"))
 
 
 var sendMessage = chatter.sendMessage = function(user, channel, text) {
+  //create id for message
+  var id = uuid();
   if(!user || !channel || !text) {
     console.log("Invalid message");
     return;
   }
-  var Message = new message.Message(channel.name, text,user.name);
+  var Message = new message.Message(channel.name, text,user.name, id);
   var event = pluginManager.fireEvent('MessageSendEvent', {message: Message});
     //If event is canceled don't send message to channel
   if(event.result === Result.deny) {
@@ -233,6 +235,7 @@ require('socketio-auth')(io, {
     socket.on('message', function(message) {
       //Receive message
       //Need to catch error here
+
       console.log(message.channel + " " + message.text);
       sendMessage(connection.user, getChannel(message.channel), message.text);
     });
@@ -264,19 +267,8 @@ require('socketio-auth')(io, {
 })
 
 io.on('connection', function(socket) {
-
-
-
-
-
-
   socket.emit("LoginFields", auth.clientLoginFields())
   socket.emit("SignupFields", auth.clientSignupFields())
-
-  //sendChannels(socket)
-
-
-
   socket.on('getPlugins', function(data, callback) {
     var fs = require("fs");
     fs.readdir("client/plugins", function(err, data) {
@@ -289,3 +281,10 @@ io.on('connection', function(socket) {
     })
   })
 });
+
+function uuid() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+    return v.toString(16);
+  });
+}

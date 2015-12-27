@@ -38,7 +38,6 @@ socket.on('connect', function() {
 
       }
     })
-
     socket.on('SignupFields', function(data) {
       console.log("Got signup fiels", data)
       signUpPromts = data;
@@ -261,7 +260,7 @@ var Messages = React.createClass({
   },
   render() {
     var messages = this.state.messages.map(function(message) {
-      return ( <div> <span> {message.user}: </span> <div> {message.text} </div></div>);
+      return ( <div key={message.id}> <span> {message.user}: </span> <div> {message.text} </div></div>);
     })
     return (
       <div>
