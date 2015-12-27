@@ -9,7 +9,18 @@ var socket;
 
 //Connect to chatter server
 socket = io();
-console.log(socket)
+
+//Listen for auth messages
+socket.on('authenticated', function(data) {
+  console.log("Authed")
+  onceAuthed();
+  //hasAuthed = true;
+})
+socket.on('unauthorized', function(data) {
+  alert(data.message);
+})
+
+
 var hasAuthed = false;
 var loginPrompts;
 var signUpPromts;
@@ -48,16 +59,6 @@ function gotFields() {
     handleSubmit(e) {
       e.preventDefault();
     },
-    componentDidMount() {
-      socket.on('authenticated', function(data) {
-        console.log("Authed")
-        onceAuthed();
-        //hasAuthed = true;
-      })
-      socket.on('unauthorized', function(data) {
-        alert(data.message);
-      })
-    },
     sendLogin() {
       var login = this.state.login;
       var loginInfo = {type: (login ? "login" : "signup")}
@@ -65,7 +66,7 @@ function gotFields() {
         loginPrompts.forEach(function(key) {
           loginInfo[key] = this[key].value;
         })
-        
+
       } else {
         signUpPromts.forEach(function(key) {
           loginInfo[key] = this[key].value;
