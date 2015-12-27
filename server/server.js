@@ -11,6 +11,7 @@ var pluginManager =  this.pluginManager = pm(this);
 var Channel = require("./channel").channel;
 var User = require('./user').User;
 var Auth = require('./auth').Auth;
+var Storage = require('./storage').Storage
 var Config = require("./config").Config
 var _ = require('lodash');
 var jwtSecret = 'secretsss';
@@ -30,8 +31,9 @@ GLOBAL.chatter = this;
 var channels = {};
 var users = {};
 var connections = [];
-//Auth system currently being used
+//Auth & storage system currently being used
 var auth;
+var storage;
 
 
 var request = chatter.request = function(options, callback) {
@@ -103,6 +105,21 @@ var getPlugin = chatter.getPlugin = function(name) {
   return pluginManager.getPlugin(name);
 }
 
+var setStorage = chatter.setStorage = function(newStorage) {
+  if(newStorage instanceof Storage) {
+    if(storage) {
+      storage.stop();
+    }
+    newStorage.start();
+    storage = newStorage;
+    console.log("Using Storage system " + storage.name);
+  } else {
+    throw "Storage system must extend Storage class"
+  }
+}
+setStorage(new Storage("default"));
+//give Storage access to plugins for extending
+chatter.Storage = Storage;
 var setAuth = chatter.setAuth = function(newAuth) {
   //check if newAuth is instance of auth
   if(newAuth instanceof Auth) {
@@ -174,7 +191,13 @@ var sendChannels = function(socket) {
 }
 
 
-
+//Listen for plugins finish loading events
+pluginManager.registerEvent("PluginsFinishedLoadingEvent", function(event) {
+  //load all channels, users, messages
+  storage.loadChannels();
+  storage.loadUsers();
+  storage.loadMessages();
+})
 createChannel('general');
 createChannel('random');
 createUser('joe').name = "joe"
@@ -284,6 +307,46 @@ io.on('connection', function(socket) {
     })
   })
 });
+
+var shutdown = function(done) {
+
+  console.log("Shutdown started")
+
+  var count = 0;
+
+  storage.saveChannels(channels, d);
+  storage.saveUsers(users, d);
+  var messages = [];
+  for(var i = 0; i < channels.length; i++) {
+    messages.concat(channels[i].messages);
+  }
+  storage.saveMessages(messages,d);
+
+  setTimeout(function() {
+    count = 3;
+    console.log("Did not shutdown in time killing...")
+    d();
+  }, 10000)
+
+  function d() {
+    count++;
+    if(count >= 3) {
+      done && done();
+      process.exit(0);
+    }
+  }
+
+}
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+process.once('SIGUSR2', function () {
+  shutdown(function () {
+    process.kill(process.pid, 'SIGUSR2');
+  });
+});
+
+
 
 function uuid() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {

@@ -4,12 +4,17 @@ class PluginManager {
     this.events = {};
     var plugins = [];
     var fs = require("fs");
+    var amount;
+    var self = this;
     var addPlugin = function(dir, data) {
       console.log("Loading: " + data.name)
       var module = require(dir);
       var obj = new module(chatter);
       var createPlugin = new Plugin(data.name, data.author, data.description, obj);
       plugins.push(createPlugin);
+      if(amount === plugins.length) {
+        var event = self.fireEvent("PluginsFinishedLoadingEvent", {});
+      }
     }
 
     this.getPlugin = function(name) {
@@ -21,17 +26,17 @@ class PluginManager {
     }
     var load = function(name) {
 
-      var data = fs.readFileSync("plugins/"+name + "/plugin.json"); 
+      var data = fs.readFileSync("plugins/"+name + "/plugin.json");
       data = JSON.parse(data);
       if(!self.getPlugin(data.name)) {
         if(data.depend) {
           data.depend.forEach(function(name) {
             if(!self.getPlugin(name)) {
-              load(name);  
+              load(name);
             }
           });
         }
-        addPlugin("./plugins/"+name + "/" + data.main, data);  
+        addPlugin("./plugins/"+name + "/" + data.main, data);
 
       }
 
@@ -40,12 +45,13 @@ class PluginManager {
     fs.readdir("./plugins", function(err, dir) {
       //load plugins
       var toLoad = [];
+      amount = dir.length;
       dir.forEach(function(plugin) {
         if(!self.getPlugin(plugin)) {
           console.log("Going to load " + plugin)
-          load(plugin);  
+          load(plugin);
         }
-      }) 
+      })
     })
 
   }
@@ -69,7 +75,7 @@ class PluginManager {
     var event = this.events[name];
     var e = new Event(name, args);
     e.Results = Result;
-    if(event) { 
+    if(event) {
       for(var i = 0; i < event.length; i++) {
         event[i].callback(e);
       }
@@ -133,9 +139,9 @@ var allow = new Result("ALLOW", 2);
 var def = new Result("DEFAULT", 1);
 
 Result.states = {
-  "0":  deny, 
-  "1":  def, 
-  "2":  allow, 
+  "0":  deny,
+  "1":  def,
+  "2":  allow,
   "default": def,
   "allow": allow,
   "deny": deny,

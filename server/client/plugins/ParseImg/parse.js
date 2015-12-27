@@ -11,7 +11,7 @@ export default function(chatter) {
       }
 
     }  catch(e) {
-      //http://github.com string1 http://google.com s25a http://test.com http://why.com sdsads asddsa http://workshub.com
+
       //not json check if message is linkable
       var results = [];
       var text = event.message.text;
@@ -26,6 +26,7 @@ export default function(chatter) {
         last = end;
         return url;
       });
+      console.log(text)
       results.push(text.substring(last, text.length))
       if(found) {
         var end = results.map(function(current) {
