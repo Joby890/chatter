@@ -1,5 +1,8 @@
 module.exports = function(chatter) {
   this.test = "We created a plugin!";
+
+
+  var config = chatter.loadConfig(__dirname + "/config.json");
   chatter.pluginManager.registerEvent("MessageSendEvent", function(event) {
     console.log("New Message sent by: " + event.message.user)
     console.log("Text: " + event.message.text)
@@ -17,9 +20,10 @@ module.exports = function(chatter) {
   chatter.pluginManager.registerEvent("UserConnectEvent", function(event) {
     chatter.sendMessage(chatter.getUser('chatterbot'), chatter.getChannel('general'), "Hello " + event.user.name +  " welcome to chatter")
   })
-
-  var testAuth = require('./testAuth').TestAuth;
-  chatter.setAuth(new testAuth());
+  if(config.get("Use Permissions Test")) {
+    var testAuth = require('./testAuth').TestAuth;
+    chatter.setAuth(new testAuth());
+  }
 
 
 

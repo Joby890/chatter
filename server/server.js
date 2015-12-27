@@ -119,7 +119,8 @@ var setAuth = chatter.setAuth = function(newAuth) {
 }
 //default to empty permission system
 setAuth(new Auth("default"))
-
+//give access to Auth system to chatter
+chatter.Auth = Auth;
 
 var sendMessage = chatter.sendMessage = function(user, channel, text) {
   //create id for message
@@ -192,15 +193,17 @@ require('socketio-auth')(io, {
 
     var resultData;
     if(data.type === "login") {
-      resultData = auth.authLogin(data);
+      auth.authLogin(data, done);
     } else {
-      resultData = auth.authSignup(data);
+      auth.authSignup(data, done);
     }
-    console.log(resultData)
-    if(resultData.success) {
-      return callback(null, resultData.profile);
-    } else {
-     return callback(new Error(resultData.error))
+    function done(resultData) {
+      if(resultData.success) {
+        return callback(null, resultData.profile);
+      } else {
+        return callback(new Error(resultData.error))
+      }
+
     }
   },
   postAuthenticate: function(socket, data, profile) {
