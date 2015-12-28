@@ -5,7 +5,7 @@ class PluginManager {
     this.plugins = [];
     //var fs = require("fs");
     window.Plugin = Plugin;
-    
+
 
   }
   getPlugin(name) {
@@ -37,11 +37,11 @@ class PluginManager {
         if(data.depend) {
           data.depend.forEach(function(newName) {
             if(!self.getPlugin(newName)) {
-              load(newName, all[newName], all);  
+              load(newName, all[newName], all);
             }
           });
         }
-        addPlugin("plugins/"+name + "/" + data.main, data);  
+        addPlugin("plugins/"+name + "/" + data.main, data);
 
       }
 
@@ -74,9 +74,15 @@ class PluginManager {
     var event = this.events[name];
     var e = new Event(name, args);
     e.Results = Result;
-    if(event) { 
+    if(event) {
       for(var i = 0; i < event.length; i++) {
-        event[i].callback(e);
+        try {
+          event[i].callback(e);
+        } catch(e) {
+          console.log("Error caught while " + name + " was firing!")
+          console.log(e)
+          console.log(e.stack)
+        }
       }
     }
 
@@ -138,9 +144,9 @@ var allow = new Result("ALLOW", 2);
 var def = new Result("DEFAULT", 1);
 
 Result.states = {
-  "0":  deny, 
-  "1":  def, 
-  "2":  allow, 
+  "0":  deny,
+  "1":  def,
+  "2":  allow,
   "default": def,
   "allow": allow,
   "deny": deny,

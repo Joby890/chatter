@@ -77,7 +77,13 @@ class PluginManager {
     e.Results = Result;
     if(event) {
       for(var i = 0; i < event.length; i++) {
-        event[i].callback(e);
+        try {
+          event[i].callback(e);
+        } catch(e) {
+          console.log("Error caught while " + name + " was firing!")
+          console.log(e)
+          console.log(e.stack)
+        }
       }
     }
 
