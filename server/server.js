@@ -71,6 +71,7 @@ var createChannel = chatter.createChannel = function(name) {
     return;
   }
   channels[event.name] = new Channel(event.name);
+  storage.saveChannel(channels[event.name])
   sendChannels();
 }
 
@@ -90,6 +91,7 @@ var createUser = chatter.createUser = function(name) {
     return;
   }
   users[event.user.name] = event.user;
+  storage.saveUser(event.user);
   return event.user;
 }
 
@@ -117,7 +119,10 @@ var setStorage = chatter.setStorage = function(newStorage) {
     throw "Storage system must extend Storage class"
   }
 }
+
 setStorage(new Storage("default"));
+
+
 //give Storage access to plugins for extending
 chatter.Storage = Storage;
 var setAuth = chatter.setAuth = function(newAuth) {
@@ -140,6 +145,7 @@ setAuth(new Auth("default"))
 chatter.Auth = Auth;
 
 var sendMessage = chatter.sendMessage = function(user, channel, text) {
+
   //create id for message
   var id = uuid();
   if(!user || !channel || !text) {
@@ -147,6 +153,8 @@ var sendMessage = chatter.sendMessage = function(user, channel, text) {
     return;
   }
   var Message = new message.Message(channel.name, text,user.name, id);
+  //Save Message
+  storage.saveMessage(Message);
   var event = pluginManager.fireEvent('MessageSendEvent', {message: Message});
     //If event is canceled don't send message to channel
   if(event.result === Result.deny) {
@@ -310,45 +318,6 @@ io.on('connection', function(socket) {
       socket.emit("getPlugins", obj);
     })
   })
-});
-
-var shutdown = function(done) {
-
-  console.log("Shutdown started")
-
-  var count = 0;
-
-  storage.saveChannels(channels, d);
-  storage.saveUsers(users, d);
-  var mess = [];
-  _.each(channels, function(channel) {
-    mess = mess.concat(channel.messages);
-
-  })
-  storage.saveMessages(mess,d);
-
-  setTimeout(function() {
-    count = 3;
-    console.log("Did not shutdown in time killing...")
-    d();
-  }, 10000)
-
-  function d() {
-    count++;
-    if(count >= 3) {
-      done && done();
-      process.exit(0);
-    }
-  }
-
-}
-
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
-process.once('SIGUSR2', function () {
-  shutdown(function () {
-    process.kill(process.pid, 'SIGUSR2');
-  });
 });
 
 

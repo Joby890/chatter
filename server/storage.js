@@ -8,24 +8,21 @@ class Storage {
     done()
   }
 
-  saveUsers(users, done) {
-    done()
+  saveUser(user) {
   }
 
 
   loadMessages() {
   }
 
-  saveMessages(messages, done) {
-    done()
+  saveMessage(message) {
   }
 
   loadChannels(done) {
     done()
   }
 
-  saveChannels(channels, done) {
-    done()
+  saveChannel(channel) {
   }
 
   start() {

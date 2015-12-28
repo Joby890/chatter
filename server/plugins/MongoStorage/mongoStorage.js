@@ -43,51 +43,43 @@ module.exports = function(chatter) {
             //console.log(message)
             var channel = chatter.getChannel(message.channel);
             //console.log(channel)
-            channel.messages.push({id: message.id, text: message.text, channel : message.channel, user: message.user})
+            channel.messages.push({id: message.id, text: message.text, channel : message.channel, user: message.username})
           }
         })
       }
 
-      saveChannels(channels, done) {
-        _.each(channels, function(channel) {
-          Channel.findOne({name: channel.name}, function(err, found) {
-            if(err) console.log(err);
-            if(!found) {
-              var createdChannel = new Channel({name: channel.name});
-              createdChannel.save();
-            }
-          })
-        });
-        //5 seconds to save
-        setTimeout(done, 5000);
+      saveChannel(channel) {
+        Channel.findOne({name: channel.name}, function(err, found) {
+          if(err) console.log(err);
+          if(!found) {
+            var createdChannel = new Channel({name: channel.name});
+            createdChannel.save();
+          }
+        })
       }
 
-      saveUsers(users, done) {
-        _.each(users, function(user) {
-          User.findOne({username: user.name}, function(err, found) {
-            if(err) console.log(err);
-            if(!found) {
-              var createdUser = new User({username: user.name});
-              createdUser.save();
-            }
-          })
-        });
-        //5 seconds to save
-        setTimeout(done, 5000);
+      saveUser(user) {
+
+        User.findOne({username: user.name}, function(err, found) {
+          if(err) console.log(err);
+          if(!found) {
+            var createdUser = new User({username: user.name});
+            createdUser.save();
+          }
+        })
+
       }
 
-      saveMessages(messages, done) {
-        _.each(messages, function(message) {
-          Message.findOne({id: message.id}, function(err, found) {
-            if(err) console.log(err);
-            if(!found) {
-              console.log(message.user)
-              var createdMessage = new Message({id: message.id, text: message.text, username: message.user, channel: message.channel});
-              createdMessage.save();
-            }
-          })
-        });
-        setTimeout(done, 5000);
+      saveMessage(message) {
+        Message.findOne({id: message.id}, function(err, found) {
+          if(err) console.log(err);
+          if(!found) {
+            console.log(message.user)
+            var createdMessage = new Message({id: message.id, text: message.text, username: message.user, channel: message.channel});
+            createdMessage.save();
+          }
+        })
+
       }
   }
 
