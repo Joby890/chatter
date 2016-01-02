@@ -4,7 +4,7 @@ module.exports = function(chatter) {
   var mongoose = require('mongoose');
   var conn = mongoose.createConnection('mongodb://localhost/mongooseStorage');
   var _ = require('lodash');
-  var Message = conn.model('Message', {id: String, text: String, username: String, channel: String});
+  var Message = conn.model('Message', {id: String, text: String, username: String, channel: String, timeStamp: Date});
   var Channel = conn.model('Channel', {name: String});
   var User = conn.model('User', {username: String})
 
@@ -43,7 +43,13 @@ module.exports = function(chatter) {
             //console.log(message)
             var channel = chatter.getChannel(message.channel);
             //console.log(channel)
-            channel.messages.push({id: message.id, text: message.text, channel : message.channel, user: message.username})
+            channel.messages.push({
+              id: message.id,
+              text: message.text,
+              channel : message.channel,
+              user: message.username,
+              timeStamp: message.timeStamp
+            });
           }
         })
       }
@@ -75,7 +81,13 @@ module.exports = function(chatter) {
           if(err) console.log(err);
           if(!found) {
             console.log(message.user)
-            var createdMessage = new Message({id: message.id, text: message.text, username: message.user, channel: message.channel});
+            var createdMessage = new Message({
+              id: message.id,
+              text: message.text,
+              username: message.user,
+              channel: message.channel,
+              timeStamp: message.timeStamp,
+            });
             createdMessage.save();
           }
         })

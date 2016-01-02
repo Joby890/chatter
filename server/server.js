@@ -148,11 +148,13 @@ var sendMessage = chatter.sendMessage = function(user, channel, text) {
 
   //create id for message
   var id = uuid();
+  //Create a time stamp for the message when we got the message
+  var timeStamp = new Date();
   if(!user || !channel || !text) {
     console.log("Invalid message");
     return;
   }
-  var Message = new message.Message(channel.name, text,user.name, id);
+  var Message = new message.Message(channel.name, text, user.name, id, timeStamp);
   //Save Message
   storage.saveMessage(Message);
   var event = pluginManager.fireEvent('MessageSendEvent', {message: Message});
@@ -220,6 +222,7 @@ createUser('chatterbot')
 
 require('socketio-auth')(io, {
   authenticate: function (socket, data, callback) {
+    console.log("Event")
     var event = pluginManager.fireEvent("UserPreAuthenticateEvent", {data: data});
     if(event.result === Result.deny) {
       console.log(event)

@@ -259,8 +259,14 @@ var Messages = React.createClass({
     })
   },
   render() {
+
     var messages = this.state.messages.map(function(message) {
-      return ( <div key={message.id}> <span> {message.user}: </span> <div> {message.text} </div></div>);
+      var time = new Date(message.timeStamp).toLocaleTimeString().replace(/:\d+ /, ' ');
+      return (
+        <div key={message.id}>
+          <div> {time} </div>
+          <span>  {message.user}: </span> <div> {message.text} </div>
+        </div>);
     })
     return (
       <div>
