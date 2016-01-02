@@ -37,9 +37,19 @@ var storage;
 
 
 var request = chatter.request = function(options, callback) {
-  req("http://"+options.host+options.path, function(err, response, body) {
-    callback(JSON.parse(body));
-  })
+  try {
+    req("http://"+options.host+options.path, function(err, response, body) {
+      try {
+        callback(JSON.parse(body));
+      } catch(e) {
+        console.log("Error caught during callback "+e)
+        console.log(e.stack);
+      }
+    })
+  } catch(e) {
+    console.log("Error caught during request"+e)
+    console.log(e.stack);
+  }
 }
 
 

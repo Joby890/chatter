@@ -13,11 +13,14 @@ module.exports = function(chatter) {
         host: "api.giphy.com",
         path: path,
       }, function(res) {
-        giphy.sendMessage(chatter.getChannel(event.message.channel), JSON.stringify({type: 'img', src:res.data[Math.floor(Math.random() * randomPick)].images["fixed_height"].url}))
+        var num = Math.floor(Math.random() * randomPick);
+        if(res.data[num]) {
+          giphy.sendMessage(chatter.getChannel(event.message.channel), JSON.stringify({type: 'img', src:res.data[num].images["fixed_height"].url}))
+        }
       })
-      
+
     }
-    
+
   })
 
 }
