@@ -304,13 +304,24 @@ var App = React.createClass({
   getInitialState : function(){
 
     return{
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
       messages : []
     };
   },
 
+  handleResize: function() {
+    var event = chatter.pluginManager.fireEvent("WindowResizeEvent", {});
+    this.setState({
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight,
+    })
+
+  },
+
   componentDidMount: function() {
     var self = this;
-
+    window.addEventListener('resize', this.handleResize)
   },
 
   getPanel(name) {
@@ -334,10 +345,10 @@ var App = React.createClass({
 
     return (
       <div>
-        <Panel style={testStyles.panelLeft} top="0" left="0"  width="200" height={window.innerHeight} ref={(comp) => this.left = comp}>  </Panel>
-        <Panel style={testStyles.panelCenter} top="0" left="200"  width={window.innerWidth - 500 -200} height={window.innerHeight * .9} ref={(comp) => this.center = comp}>  </Panel>
-        <Panel style={testStyles.panelRight} top="0" left={window.innerWidth - 500}  width="500" height={window.innerHeight} ref={(comp) => this.right = comp}>  </Panel>
-        <Panel style={testStyles.panelBottom} top={window.innerHeight *.9} left="200" width={window.innerWidth - 500 -200} height={window.innerHeight * .1} ref={(comp) => this.bottom  = comp}> </Panel>
+        <Panel style={testStyles.panelLeft} top="0" left="0"  width="200" height={this.state.windowHeight} ref={(comp) => this.left = comp}>  </Panel>
+        <Panel style={testStyles.panelCenter} top="0" left="200"  width={this.state.windowWidth - 500 -200} height={this.state.windowHeight * .9} ref={(comp) => this.center = comp}>  </Panel>
+        <Panel style={testStyles.panelRight} top="0" left={this.state.windowWidth - 500}  width="500" height={this.state.windowHeight} ref={(comp) => this.right = comp}>  </Panel>
+        <Panel style={testStyles.panelBottom} top={this.state.windowHeight *.9} left="200" width={this.state.windowWidth - 500 -200} height={this.state.windowHeight * .1} ref={(comp) => this.bottom  = comp}> </Panel>
       </div>
       )
   }
