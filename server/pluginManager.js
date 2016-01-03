@@ -1,4 +1,5 @@
 'use strict'
+var _ = require('lodash');
 class PluginManager {
   constructor(chatter) {
     this.events = {};
@@ -9,12 +10,21 @@ class PluginManager {
     var addPlugin = function(dir, data) {
       console.log("Loading: " + data.name)
       var module = require(dir);
+      //Create the plugin instance
       var obj = new module(chatter);
-      var createPlugin = new Plugin(data.name, data.author, data.description, obj);
+      //Build the default plugin
+      var createPlugin = new Plugin(data.name, data.author, data.description);
+      //combind the two
+      _.extend(createPlugin, obj);
+      createPlugin.onEnable();
       plugins.push(createPlugin);
       if(amount === plugins.length) {
         var event = self.fireEvent("PluginsFinishedLoadingEvent", {});
       }
+    }
+
+    this.disablePlugin = function(plugin) {
+      plugin.onDisable && plugin.onDisable();
     }
 
     this.getPlugin = function(name) {
@@ -97,11 +107,10 @@ class PluginManager {
 }
 
 class Plugin {
-  constructor(name, author, description, obj) {
+  constructor(name, author, description) {
     this.name = name;
     this.author = author;
     this.description = description;
-    this.obj = obj;
   }
 }
 

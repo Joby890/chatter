@@ -1,6 +1,9 @@
 module.exports = function(chatter) {
-  console.log(chatter)
-  chatter.listenToAll("createChannel", function(data) {
-    chatter.createChannel(data.name);
-  })
+
+  this.onEnable = function() {
+    chatter.listenToAll("createChannel", function(data) {
+      chatter.createChannel(data.name);
+    })
+  }
+
 }

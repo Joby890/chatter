@@ -1,6 +1,7 @@
 'use strict'
 module.exports = function(chatter) {
 
+
   var mongoose = require('mongoose');
   var conn = mongoose.createConnection('mongodb://localhost/mongooseStorage');
   var _ = require('lodash');
@@ -8,7 +9,8 @@ module.exports = function(chatter) {
   var Channel = conn.model('Channel', {name: String});
   var User = conn.model('User', {username: String})
 
-  class MongoStorage extends chatter.Storage {
+  this.onEnable = function() {
+    class MongoStorage extends chatter.Storage {
 
 
       constructor() {
@@ -93,8 +95,11 @@ module.exports = function(chatter) {
         })
 
       }
+    }
+
+
+    chatter.setStorage(new MongoStorage())
+    
   }
 
-
-  chatter.setStorage(new MongoStorage())
 }
