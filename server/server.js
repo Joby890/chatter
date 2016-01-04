@@ -93,7 +93,7 @@ var getChannel = chatter.getChannel = function(name) {
 
 var createUser = chatter.createUser = function(name) {
   if(users[name] !== undefined) {
-    return;
+    return users[name];
   }
   var event = pluginManager.fireEvent("CreateUserEvent", {user: new User(name)});
   if(event.result === Result.deny) {
@@ -212,7 +212,7 @@ var sendChannels = function(socket) {
 
 
 //Listen for plugins finish loading events
-pluginManager.registerEvent("PluginsFinishedLoadingEvent", function(event) {
+pluginManager.registerEvent(null, "PluginsFinishedLoadingEvent", function(event) {
   //load all channels, users, messages
   storage.loadChannels(function() {
     storage.loadUsers(function() {

@@ -3,11 +3,11 @@ module.exports = function(chatter) {
 
   this.onEnable = function() {
     var config = chatter.loadConfig(__dirname + "/config.json");
-    chatter.pluginManager.registerEvent("MessageSendEvent", function(event) {
+    chatter.pluginManager.registerEvent(this, "MessageSendEvent", function(event) {
       console.log("New Message sent by: " + event.message.user)
       console.log("Text: " + event.message.text)
     }, 3);
-    chatter.pluginManager.registerEvent("UserMessageSendEvent", function(event) {
+    chatter.pluginManager.registerEvent(this, "UserMessageSendEvent", function(event) {
       var message = event.message.text;
       var index;
       while(message.indexOf("{{username}}") >= 0) {
@@ -17,7 +17,7 @@ module.exports = function(chatter) {
       event.message.text = message;
     }, 1)
 
-    chatter.pluginManager.registerEvent("UserConnectEvent", function(event) {
+    chatter.pluginManager.registerEvent(this, "UserConnectEvent", function(event) {
       chatter.sendMessage(chatter.getUser('chatterbot'), chatter.getChannel('general'), "Hello " + event.user.name +  " welcome to chatter")
     })
     if(config.get("Use Permissions Test")) {

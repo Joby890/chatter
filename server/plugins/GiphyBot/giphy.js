@@ -2,12 +2,13 @@ module.exports = function(chatter) {
 
 
   this.onEnable = function() {
+    var self = this;
     var giphy = chatter.createUser('GiphyBot');
     giphy.setOnline(true);
 
     var config = chatter.loadConfig(__dirname + "/config.json");
 
-    chatter.pluginManager.registerEvent("MessageSendEvent", function(event) {
+    chatter.pluginManager.registerEvent(this, "MessageSendEvent", function(event) {
       if(event.message.text.substring(0, 5) === "giphy") {
         var search = event.message.text.substring(6, event.message.text.length);
         var randomPick = config.get("Random Pick Number") || 1;
@@ -19,6 +20,8 @@ module.exports = function(chatter) {
           var num = Math.floor(Math.random() * randomPick);
           if(res.data[num]) {
             giphy.sendMessage(chatter.getChannel(event.message.channel), JSON.stringify({type: 'img', src:res.data[num].images["fixed_height"].url}))
+            chatter.pluginManager.disablePlugin(self);
+            chatter.pluginManager.enablePlugin(self);
           }
         })
 
