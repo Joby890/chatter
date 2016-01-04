@@ -3,27 +3,27 @@
 
 export default function(chatter) {
   console.log("Simple Channel started");
+  this.onEnable = function() {
+    chatter.pluginManager.registerEvent(this, "AfterAuthEvent", function(event) {
+      var page;
+      var AddChannel = React.createClass({
 
-  chatter.pluginManager.registerEvent("AfterAuthEvent", function(event) {
-    var page;
-    var AddChannel = React.createClass({
+        componentDidMount:function() {
+          var self = this;
+          console.log(self, " mounted")
+        },
 
-      componentDidMount:function() {
-        var self = this;
-        console.log(self, " mounted")
-      },
-
-      addChannel: function() {
-        chatter.send("createChannel", {name: this.channelName.value});
-        this.channelName.value = "";
-        chatter.getPanel('right').removePage(page);
-        console.log(chatter.getPanel('right').hasPage(page))
-      },
-      render: function() {
-        return React.createElement("div", null,
+        addChannel: function() {
+          chatter.send("createChannel", {name: this.channelName.value});
+          this.channelName.value = "";
+          chatter.getPanel('right').removePage(page);
+          console.log(chatter.getPanel('right').hasPage(page))
+        },
+        render: function() {
+          return React.createElement("div", null,
           React.createElement("input", {ref: function(c)  {return this.channelName = c;}.bind(this)}),
           React.createElement("input", {type:"button", onClick: this.addChannel, value: "Add Channel"})
-          );
+        );
       }
     });
     page = {weight: .1, component: AddChannel};
@@ -41,8 +41,10 @@ export default function(chatter) {
 
     console.log("Adding Channel to right below channels");
     chatter.getPanel('left').addPage({weight: 2, component: CreateButton});
-    
+
   })
+
+  }
 
 
 }

@@ -244,7 +244,7 @@ var Messages = React.createClass({
 
   componentDidMount() {
     var self = this;
-    chatter.pluginManager.registerEvent("ChannelChangeEvent", function(event) {
+    chatter.pluginManager.registerEvent(null, "ChannelChangeEvent", function(event) {
       console.log("Channel changing to: " + event.name)
       self.setState({
         messages: [],

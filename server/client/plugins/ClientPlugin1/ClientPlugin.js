@@ -1,5 +1,5 @@
 'use strict'
-// export function(chatter) 
+// export function(chatter)
 
 // export function result (name, description, author) {
 //   console.log(arguments)
@@ -10,5 +10,7 @@
 
 
 export default function(chatter) {
-  console.log("plugin started")
+  this.onEnable = function() {
+    console.log("plugin started")
+  }
 }

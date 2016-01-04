@@ -22,8 +22,14 @@ class PluginManager {
 
       System.import(dir).then(function(module) {
         var classplugin = module.default;
+        //instance
         var obj = new classplugin(chatter);
-        self.plugins.push(new Plugin(data.name, data.author, data.description, obj));
+        //plugin
+        var createPlugin  = new Plugin(data.name, data.author, data.description);
+        _.extend(createPlugin, obj);
+        self.enablePlugin(createPlugin);
+
+        self.plugins.push(createPlugin);
 
       });
       // var module = require(dir);
@@ -31,6 +37,17 @@ class PluginManager {
       // var createPlugin = new Plugin(data.name, data.author, data.description, obj);
       // plugins.push(createPlugin);
     }
+    this.enablePlugin = function(plugin) {
+      plugin.onEnable();
+    }
+
+    this.disablePlugin = function(plugin) {
+      console.log("Disabling " + plugin.name);
+      plugin.onDisable && plugin.onDisable();
+      this.unRegisterEvents(plugin)
+    }
+
+
 
     var load = function(name, data, all) {
       if(!self.getPlugin(data.name)) {
@@ -55,8 +72,20 @@ class PluginManager {
     socket.emit('getPlugins', {});
   }
 
+  unRegisterEvents(plugin) {
+    for(var key in this.events) {
+      var events = this.events[key];
+      this.events[key] = _.reject(events, function(e) {
+          return e.plugin === plugin;
+      });
+    }
+  }
 
-  registerEvent(name, callback, priority) {
+
+  registerEvent(plugin, name, callback, priority) {
+    if( (! (plugin instanceof Plugin)) && plugin !== null ) {
+      throw new Error("First prama needs to be a plugin or null value")
+    }
     if(!this.events[name]) {
       this.events[name] = [];
     }
@@ -64,7 +93,7 @@ class PluginManager {
       priority = 3;
     }
     var event = this.events[name];
-    event.push({priority: priority, callback: callback});
+    event.push({priority: priority, callback: callback, plugin: plugin});
     event.sort(function(a,b) {
       return a.priority - b.priority;
     })
