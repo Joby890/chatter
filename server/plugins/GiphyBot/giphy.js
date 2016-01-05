@@ -20,8 +20,6 @@ module.exports = function(chatter) {
           var num = Math.floor(Math.random() * randomPick);
           if(res.data[num]) {
             giphy.sendMessage(chatter.getChannel(event.message.channel), JSON.stringify({type: 'img', src:res.data[num].images["fixed_height"].url}))
-            chatter.pluginManager.disablePlugin(self);
-            chatter.pluginManager.enablePlugin(self);
           }
         })
 
