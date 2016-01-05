@@ -13,7 +13,6 @@ class Config {
       }
 
     } catch(e) {
-      console.log("error reading from file " + f);
     }
   }
 
