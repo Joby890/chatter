@@ -6,7 +6,7 @@ class Config {
     try {
       var load = fs.readFileSync(f);
       try {
-        this.data = JSON.parse(load); 
+        this.data = JSON.parse(load);
 
       } catch(e1) {
         console.log("error parsing data to json: " + f);
@@ -20,8 +20,26 @@ class Config {
   get(string) {
     if(this.data) {
       return this.data[string];
-      
+
     }
+  }
+
+  setup(defaultData) {
+    if(!this.data) {
+      this.data = defaultData;
+    }
+  }
+  set(key, value) {
+    if(this.data) {
+        this.data[key] = value;
+    }
+  }
+
+  save() {
+    if(!this.data) {
+      throw new Error('Unable to save null value to file')
+    }
+    fs.writeFile(f, JSON.stringify(this.data));
   }
 
 
