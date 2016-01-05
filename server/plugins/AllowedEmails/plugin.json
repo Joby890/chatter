@@ -1,6 +1,0 @@
-{
-  "name": "AllowedEmails",
-  "author": "Joe Brumaghim",
-  "description": "Plugin to allow only certain emails to signup",
-  "main": "allow.js"
-}

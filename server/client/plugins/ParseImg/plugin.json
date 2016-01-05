@@ -1,6 +1,0 @@
-{
-  "name": "ImageParser",
-  "author": "Joe Brumaghim",
-  "description": "Parse image tags",
-  "main": "parse.js"
-}

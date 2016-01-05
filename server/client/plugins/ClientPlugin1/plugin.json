@@ -1,6 +1,0 @@
-{
-  "name": "ClientPlugin1",
-  "author": "Joe Brumaghim",
-  "description": "A Client Plugin",
-  "main": "ClientPlugin.js"
-}
