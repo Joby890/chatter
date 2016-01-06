@@ -1,7 +1,7 @@
 var React = require("react");
 var ReactDOM = require("react-dom");
 var io = require('socket.io-client');
-var _ = require('lodash')
+var _ = require('lodash');
 var pluginManager = require("./pluginManager");
 var socket;
 
@@ -12,13 +12,13 @@ socket = io();
 
 //Listen for auth messages
 socket.on('authenticated', function(data) {
-  console.log("Authed")
+  console.log("Authed");
   onceAuthed();
   //hasAuthed = true;
-})
+});
 socket.on('unauthorized', function(data) {
   alert(data.message);
-})
+});
 
 
 var hasAuthed = false;
@@ -27,49 +27,49 @@ var signUpPromts;
 //listen for connect and get login fields and signup fields
 socket.on('connect', function() {
   //If we already have the prompts no need to listen for them
-  console.log("connected")
+  console.log("connected");
   if(!loginPrompts && !signUpPromts) {
     socket.on('LoginFields', function(data) {
-      console.log("Got login fiels", data)
+      console.log("Got login fiels", data);
       loginPrompts = data;
       if(signUpPromts && !hasAuthed) {
-        gotFields()
+        gotFields();
 
 
       }
-    })
+    });
     socket.on('SignupFields', function(data) {
-      console.log("Got signup fiels", data)
+      console.log("Got signup fiels", data);
       signUpPromts = data;
       if(loginPrompts && !hasAuthed) {
-        gotFields()
+        gotFields();
       }
-    })
+    });
 
   }
-})
+});
 
 function gotFields() {
   var Login = React.createClass({
 
     getInitialState() {
-      return {login: true}
+      return {login: true};
     },
     handleSubmit(e) {
       e.preventDefault();
     },
     sendLogin() {
       var login = this.state.login;
-      var loginInfo = {type: (login ? "login" : "signup")}
+      var loginInfo = {type: (login ? "login" : "signup")};
       if(login) {
         loginPrompts.forEach(function(key) {
           loginInfo[key] = this[key].value;
-        })
+        });
 
       } else {
         signUpPromts.forEach(function(key) {
           loginInfo[key] = this[key].value;
-        })
+        });
       }
 
       socket.emit('authentication', loginInfo);
@@ -79,19 +79,19 @@ function gotFields() {
     swapForm() {
       this.setState({
         login: !this.state.login,
-      })
+      });
     },
 
     render() {
       var fields;
       if(this.state.login) {
         fields = loginPrompts.map(function(key) {
-          return <div key={key}> {key} <input ref={(c) => this[key] = c} /></div>
-        })
+          return <div key={key}> {key} <input ref={(c) => this[key] = c} /></div>;
+        });
       } else {
         fields = signUpPromts.map(function(key) {
-          return <div key={key}> {key} <input ref={(c) => this[key] = c} /></div>
-        })
+          return <div key={key}> {key} <input ref={(c) => this[key] = c} /></div>;
+        });
       }
 
 
@@ -103,11 +103,11 @@ function gotFields() {
           </form>
           <input type='button' onClick={this.swapForm} value={!this.state.login ? "Go to Login" : "Go to Signup"}/>
         </div>
-      )
+      );
     }
 
-  })
-  ReactDOM.render(<Login />, document.getElementById("app"))
+  });
+  ReactDOM.render(<Login />, document.getElementById("app"));
 }
 
 //Give access to React to all files
@@ -120,14 +120,14 @@ var Panel = React.createClass({
   getInitialState() {
     return {
       pages: [],
-    }
+    };
   },
 
   addPage(page) {
     var pages = this.state.pages.concat(page);
     this.setState({
-      pages: pages.sort(function(a,b) {return a.weight - b.weight}),
-    })
+      pages: pages.sort(function(a,b) {return a.weight - b.weight;}),
+    });
   },
 
   hasPage(page) {
@@ -137,14 +137,14 @@ var Panel = React.createClass({
   updatePage(id) {
     this.setState({
       pages: this.state.pages,
-    })
+    });
   },
 
   removePage(page) {
     this.state.pages.splice(page, 1);
     this.setState({
       pages: this.state.pages,
-    })
+    });
   },
   render() {
     var style = _.extend({
@@ -158,19 +158,19 @@ var Panel = React.createClass({
 
     var pages = this.state.pages.map(function(page) {
       return React.createElement(page.component, null);
-    })
+    });
     return (
       <div className="test" style={style}>
         {pages}
       </div>
-    )
+    );
   }
-})
+});
 
 var ChannelList = React.createClass({
 
   getInitialState() {
-    return {channels: []}
+    return {channels: []};
   },
 
   componentDidMount() {
@@ -178,8 +178,8 @@ var ChannelList = React.createClass({
     socket.on('channels', function(data) {
         self.setState({
           channels: Object.keys(data.channels),
-        })
-    })
+        });
+    });
   },
   clickChannel: (name) => {
     var event = chatter.pluginManager.fireEvent("ChannelChangeEvent", {old: currentChannel, name: name});
@@ -198,14 +198,14 @@ var ChannelList = React.createClass({
         console.log("ChannelRender event canceled");
         return;
       }
-      return (<div onClick={self.clickChannel.bind(self, key)}> {event.name} </div>)
-    })
+      return (<div onClick={self.clickChannel.bind(self, key)}> {event.name} </div>);
+    });
     return (
       <div> {channels} </div>
-    )
+    );
   }
 
-})
+});
 
 var Messages = React.createClass({
   getInitialState() {
@@ -228,16 +228,16 @@ var Messages = React.createClass({
     }
     if(currentChannel === event.message.channel) {
 
-      var event = chatter.pluginManager.fireEvent("MessageShowEvent", {message: event.message});
-      if(event.result === Result.deny) {
+      var nextEvent = chatter.pluginManager.fireEvent("MessageShowEvent", {message: event.message});
+      if(nextEvent.result === Result.deny) {
         console.log("Message was canceled");
         return;
       }
-      console.log("Adding message ", event.message)
-      messages.push(event.message)
+      console.log("Adding message ", nextEvent.message);
+      messages.push(nextEvent.message);
       self.setState({
         messages: messages
-      })
+      });
 
     }
   },
@@ -245,18 +245,18 @@ var Messages = React.createClass({
   componentDidMount() {
     var self = this;
     chatter.pluginManager.registerEvent(null, "ChannelChangeEvent", function(event) {
-      console.log("Channel changing to: " + event.name)
+      console.log("Channel changing to: " + event.name);
       self.setState({
         messages: [],
-      })
-    })
+      });
+    });
 
-    socket.on("message", this.handleMessage)
+    socket.on("message", this.handleMessage);
     socket.on('messages', function(messages) {
       for(var i = 0; i < messages.length; i++) {
         this.handleMessage(messages[i]);
       }
-    })
+    });
   },
   render() {
 
@@ -267,19 +267,19 @@ var Messages = React.createClass({
           <div> {time} </div>
           <span>  {message.user}: </span> <div> {message.text} </div>
         </div>);
-    })
+    });
     return (
       <div>
         {messages}
       </div>
-    )
+    );
   }
 
-})
+});
 
 var SendMessage = React.createClass({
   sendMessage: function(e) {
-    socket.emit("message", {channel: currentChannel, text: this.textInput.value})
+    socket.emit("message", {channel: currentChannel, text: this.textInput.value});
     this.textInput.value = "";
   },
   handleSubmit: function(e) {
@@ -294,10 +294,10 @@ var SendMessage = React.createClass({
         </form>
       </div>
 
-    )
+    );
   }
 
-})
+});
 
 var App = React.createClass({
 
@@ -315,13 +315,13 @@ var App = React.createClass({
     this.setState({
       windowWidth: window.innerWidth,
       windowHeight: window.innerHeight,
-    })
+    });
 
   },
 
   componentDidMount: function() {
     var self = this;
-    window.addEventListener('resize', this.handleResize)
+    window.addEventListener('resize', this.handleResize);
   },
 
   getPanel(name) {
@@ -341,18 +341,18 @@ var App = React.createClass({
       panelCenter: {background: "#fff"},
       panelRight: {background: "#eee"},
       panelBottom: {background: "#ee9"},
-    }
+    };
 
     return (
       <div>
         <Panel style={testStyles.panelLeft} top="0" left="0"  width="200" height={this.state.windowHeight} ref={(comp) => this.left = comp}>  </Panel>
-        <Panel style={testStyles.panelCenter} top="0" left="200"  width={this.state.windowWidth - 500 -200} height={this.state.windowHeight * .9} ref={(comp) => this.center = comp}>  </Panel>
+        <Panel style={testStyles.panelCenter} top="0" left="200"  width={this.state.windowWidth - 500 -200} height={this.state.windowHeight * 0.9} ref={(comp) => this.center = comp}>  </Panel>
         <Panel style={testStyles.panelRight} top="0" left={this.state.windowWidth - 500}  width="500" height={this.state.windowHeight} ref={(comp) => this.right = comp}>  </Panel>
-        <Panel style={testStyles.panelBottom} top={this.state.windowHeight *.9} left="200" width={this.state.windowWidth - 500 -200} height={this.state.windowHeight * .1} ref={(comp) => this.bottom  = comp}> </Panel>
+        <Panel style={testStyles.panelBottom} top={this.state.windowHeight * 0.9} left="200" width={this.state.windowWidth - 500 -200} height={this.state.windowHeight * 0.1} ref={(comp) => this.bottom  = comp}> </Panel>
       </div>
-      )
+    );
   }
-})
+});
 
 
 
@@ -368,7 +368,7 @@ class Page {
 
 var chatter = {
   pluginManager: pluginManager(this, socket),
-}
+};
 
 window.chatter = chatter;
 
@@ -379,11 +379,11 @@ var currentChannel = "general";
 
 chatter.send = function(name, data) {
   socket.emit(name, data);
-}
+};
 
 var app;
 var onceAuthed = function() {
-  app = ReactDOM.render(<App />, document.getElementById("app"))
+  app = ReactDOM.render(<App />, document.getElementById("app"));
   chatter.getPanel = app.getPanel;
 
   chatter.getPanel('left').addPage(new Page(1, ChannelList, 'channellist'));
@@ -395,17 +395,17 @@ var onceAuthed = function() {
   socket.emit('getMessages', {channel: chatter.getCurrentChannel()});
 
 
-}
+};
 
 chatter.getCurrentChannel = function() {
   return currentChannel;
-}
+};
 
 chatter.forceUpdate = function() {
   app.forceUpdate();
-}
+};
 
-chatter.pluginManager.initialize(socket)
+chatter.pluginManager.initialize(socket);
 //Add our channellist to our left panel
 
-console.log(chatter)
+console.log(chatter);
