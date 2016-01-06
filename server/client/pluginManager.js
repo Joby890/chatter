@@ -15,6 +15,10 @@ class PluginManager {
       }
     }
   }
+  getPlugins() {
+    return this.plugins;
+  }
+
   initialize(socket) {
     var self = this;
     var addPlugin = function(dir, data) {
@@ -44,6 +48,7 @@ class PluginManager {
         return;
       }
       plugin.onEnable();
+      plugin.setEnabled(true);
     };
 
     this.disablePlugin = function(plugin) {
@@ -54,6 +59,7 @@ class PluginManager {
       }
       console.log("Disabling " + plugin.name);
       plugin.onDisable && plugin.onDisable();
+      plugin.setEnabled(false);
       this.unRegisterEvents(plugin);
     };
 
@@ -140,7 +146,17 @@ class Plugin {
     this.author = author;
     this.description = description;
     this.obj = obj;
+    this.enabled = false;
   }
+
+  isEnabled() {
+    return this.enabled;
+  }
+
+  setEnabled(bool) {
+    this.enabled = bool;
+  }
+
 }
 
 
