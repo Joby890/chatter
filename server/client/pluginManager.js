@@ -38,14 +38,24 @@ class PluginManager {
       // plugins.push(createPlugin);
     }
     this.enablePlugin = function(plugin) {
+      var event = this.fireEvent("PluginEnableEvent", {plugin: plugin});
+      if(event.result === Result.deny) {
+        console.log("PluginEnableEvent was denyed");
+        return;
+      }
       plugin.onEnable();
-    }
+    };
 
     this.disablePlugin = function(plugin) {
+      var event = this.fireEvent("PluginDisableEvent", {plugin: plugin});
+      if(event.result === Result.deny) {
+        console.log("PluginDisableEvent was denyed");
+        return;
+      }
       console.log("Disabling " + plugin.name);
       plugin.onDisable && plugin.onDisable();
-      this.unRegisterEvents(plugin)
-    }
+      this.unRegisterEvents(plugin);
+    };
 
 
 
