@@ -60,6 +60,20 @@ var getOnlineUsers = chatter.getOnlineUsers = function() {
   })
 }
 
+var send = chatter.send = function(name, data, user) {
+  //If no user specified send to everyone;
+  if(!user) {
+    connections.forEach(function(conn) {
+      conn.socket.emit(name, data);
+    });
+  } else {
+    connections.forEach(function(conn) {
+      if(conn.user === user) {
+        conn.socket.emit(name, data);
+      }
+    });
+  }
+};
 
 var sevents = [];
 var listenToAll = chatter.listenToAll = function(name, callback) {
@@ -263,16 +277,17 @@ require('socketio-auth')(io, {
     var connection = {user: null, socket: socket};
     socket.connection = connection;
     socket.connection.user = user;
+    connections.push(connection);
     var event = pluginManager.fireEvent("UserConnectEvent", {data: data, user: user});
     if(event.result === Result.deny) {
       //You shall not pass!!
       socket.connection.user = null;
+      connections.splice(connection, 1);
       socket.disconnect();
       return;
     }
     user.setOnline(true);
     sendChannels(socket);
-    connections.push(connection);
     //once authtificated then listen to events and add to connection
 
 

@@ -247,7 +247,6 @@ var Messages = React.createClass({
         console.log("Message was canceled");
         return;
       }
-      console.log("Adding message ", nextEvent.message);
       messages.push(nextEvent.message);
       self.setState({
         messages: messages
@@ -393,6 +392,16 @@ var currentChannel = "general";
 
 chatter.send = function(name, data) {
   socket.emit(name, data);
+};
+
+//Allow a plugin to listen for events from the server
+chatter.listen = function(plugin, name, callback) {
+  if( (! (plugin instanceof Plugin)) && plugin !== null ) {
+    throw new Error("First prama needs to be a plugin or null value");
+  }
+  //TODO enable to be able to remove callback when a plugin disabled
+  socket.on(name, callback);
+
 };
 
 var app;
