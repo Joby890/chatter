@@ -60,7 +60,13 @@ class PluginManager {
       console.log("Disabling " + plugin.name);
       plugin.onDisable && plugin.onDisable();
       plugin.setEnabled(false);
+      //UnRegister events on plugin
       this.unRegisterEvents(plugin);
+      //Remove pages on plugin
+      chatter.getPanel('left').removePages(plugin);
+      chatter.getPanel('right').removePages(plugin);
+      chatter.getPanel('center').removePages(plugin);
+      chatter.getPanel('bottom').removePages(plugin);
     };
 
 

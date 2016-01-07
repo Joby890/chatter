@@ -123,7 +123,11 @@ var Panel = React.createClass({
     };
   },
 
-  addPage(page) {
+  addPage(plugin, page) {
+    if( (! (plugin instanceof Plugin)) && plugin !== null ) {
+      throw new Error("First prama needs to be a plugin or null value");
+    }
+    page.plugin = plugin;
     var pages = this.state.pages.concat(page);
     this.setState({
       pages: pages.sort(function(a,b) {return a.weight - b.weight;}),
@@ -146,6 +150,16 @@ var Panel = React.createClass({
       pages: this.state.pages,
     });
   },
+
+  removePages(plugin) {
+    var pages = this.state.pages.filter(function(page) {
+      return page.plugin !== plugin;
+    });
+    this.setState({
+      pages: pages,
+    });
+  },
+
   render() {
     var style = _.extend({
       width: this.props.width,
@@ -386,9 +400,9 @@ var onceAuthed = function() {
   app = ReactDOM.render(<App />, document.getElementById("app"));
   chatter.getPanel = app.getPanel;
 
-  chatter.getPanel('left').addPage(new Page(1, ChannelList, 'channellist'));
-  chatter.getPanel('center').addPage(new Page(1, Messages));
-  chatter.getPanel('bottom').addPage(new Page(2, SendMessage));
+  chatter.getPanel('left').addPage(null, new Page(1, ChannelList, 'channellist'));
+  chatter.getPanel('center').addPage(null, new Page(1, Messages));
+  chatter.getPanel('bottom').addPage(null, new Page(2, SendMessage));
   //Let plugins know that we have offically authed with the server
   var event = chatter.pluginManager.fireEvent("AfterAuthEvent", {});
   //Once we have finished authed load messages from currernt channel
