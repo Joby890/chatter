@@ -1,3 +1,7 @@
+var injectTapEventPlugin = require('react-tap-event-plugin');
+
+
+
 var React = require("react");
 var ReactDOM = require("react-dom");
 var io = require('socket.io-client');
@@ -5,6 +9,13 @@ var _ = require('lodash');
 var pluginManager = require("./pluginManager");
 var socket;
 
+
+
+//Needed for onTouchTap
+//Can go away when react 1.0 release
+//Check this repo:
+//https://github.com/zilverline/react-tap-event-plugin
+injectTapEventPlugin();
 
 
 //Connect to chatter server
@@ -113,7 +124,59 @@ function gotFields() {
 //Give access to React to all files
 window.React = React;
 
+var InternalPage = React.createClass({
 
+  handleOption(e, index, value) {
+    var page = this.props.children;
+    if(page.options[index]) {
+      page.options[index].callback();
+    } else {
+      console.log("Closing page", page);
+      this.props.close();
+    }
+  },
+
+  render() {
+    var page = this.props.children;
+
+    var dropdownItems = page.options.map(function(o) {
+      return React.createElement(chatter.styles.MenuItem, {value: o.name, primaryText: o.name});
+    });
+    if(page.canClose) {
+      dropdownItems.push(React.createElement(chatter.styles.MenuItem, {value: "Close", primaryText: "Close"}));
+    }
+
+
+
+    if(page) {
+      if(!page.name) {
+        page.name = "";
+      }
+      if(dropdownItems.length) {
+        return (
+          React.createElement("div", null,
+            React.createElement(chatter.styles.DropDownMenu, {value:"", style: {right: "0px", position:"absolute"}, onChange: this.handleOption},
+              dropdownItems
+            ),
+            React.createElement("span", null, page.name),
+            React.createElement(page.component)
+            )
+          );
+
+      } else {
+        return (
+          React.createElement("div", null,
+            React.createElement("span", null, page.name),
+            React.createElement(page.component)
+            )
+          );
+      }
+    } else {
+      return (<div> </div>);
+    }
+
+  },
+});
 
 var Panel = React.createClass({
 
@@ -126,6 +189,10 @@ var Panel = React.createClass({
   addPage(plugin, page) {
     if( (! (plugin instanceof Plugin)) && plugin !== null ) {
       throw new Error("First prama needs to be a plugin or null value");
+    }
+    if(!(page instanceof Page)) {
+
+      throw new Error("Second prama needs to be a page");
     }
     page.plugin = plugin;
     var pages = this.state.pages.concat(page);
@@ -145,9 +212,16 @@ var Panel = React.createClass({
   },
 
   removePage(page) {
-    this.state.pages.splice(page, 1);
+    var pages = this.state.pages.filter(function(p) {
+      if(page === p) {
+        console.log(p, " matches ", page);
+        return false;
+      } else {
+        return true;
+      }
+    });
     this.setState({
-      pages: this.state.pages,
+      pages: pages,
     });
   },
 
@@ -169,9 +243,10 @@ var Panel = React.createClass({
       position: "absolute",
       overflow: "auto",
     }, this.props.style);
-
+    var self = this;
     var pages = this.state.pages.map(function(page) {
-      return React.createElement(page.component, null);
+      return React.createElement(InternalPage, {close: self.removePage.bind(null, page)}, page);
+      //return React.createElement(page.component, null);
     });
     return (
       <div className="test" style={style}>
@@ -372,18 +447,40 @@ var App = React.createClass({
 
 
 class Page {
-  constructor(weight, component, id) {
-    this.id = id;
+  constructor(weight, component, name, options, canClose) {
+    this.name = name;
     this.weight = weight;
     this.component = component;
+    this.options = [];
+    if(options) {
+      this.options = this.options.concat(options);
+    }
+    this.canClose = !canClose;
   }
 }
+
+window.Page = Page;
 
 var chatter = {
   pluginManager: pluginManager(this, socket),
 };
 
 window.chatter = chatter;
+
+var matUi = require('material-ui');
+console.log(matUi.RaisedButton);
+//import {RaisedButton, DropDownMenu, MenuItem} from 'material-ui';
+
+//temp config idea for changing theme
+var styles = {
+  Button: matUi.RaisedButton,
+  DropDownMenu: matUi.DropDownMenu,
+  //Input: reactMat.Input,
+  MenuItem: matUi.MenuItem,
+};
+
+
+chatter.styles = styles;
 
 var currentChannel = "general";
 
@@ -409,9 +506,9 @@ var onceAuthed = function() {
   app = ReactDOM.render(<App />, document.getElementById("app"));
   chatter.getPanel = app.getPanel;
 
-  chatter.getPanel('left').addPage(null, new Page(1, ChannelList, 'channellist'));
-  chatter.getPanel('center').addPage(null, new Page(1, Messages));
-  chatter.getPanel('bottom').addPage(null, new Page(2, SendMessage));
+  chatter.getPanel('left').addPage(null, new Page(1, ChannelList, 'Channels', [], true));
+  chatter.getPanel('center').addPage(null, new Page(1, Messages, null, [{name: "Channel Settings", callback: function() {console.log("test");}}], true));
+  chatter.getPanel('bottom').addPage(null, new Page(2, SendMessage, null, [], true));
   //Let plugins know that we have offically authed with the server
   var event = chatter.pluginManager.fireEvent("AfterAuthEvent", {});
   //Once we have finished authed load messages from currernt channel
@@ -432,3 +529,12 @@ chatter.pluginManager.initialize(socket);
 //Add our channellist to our left panel
 
 console.log(chatter);
+
+
+window.uuid = function() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+    return v.toString(16);
+  });
+
+};
