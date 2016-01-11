@@ -188,10 +188,12 @@ var sendMessage = chatter.sendMessage = function(user, channel, text) {
     return;
   }
 
-  channel.messages.push(event.message);
-  //Send to connected
-  for(var i = 0; i < connections.length; i++) {
-    sendConnMessage(event.message, connections[i]);
+  var m = channel.addMessage(event.message);
+  if(m) {
+    //Send to connected
+    for(var i = 0; i < connections.length; i++) {
+      sendConnMessage(m, connections[i]);
+    }
   }
 
 };
@@ -308,9 +310,14 @@ require('socketio-auth')(io, {
 
     socket.on('getMessages', function(data) {
       var channel = channels[data.channel];
+      var num = data.num;
+      num = num || 100;
       if(channel) {
-        for(var i = 0; i < channel.messages.length; i++) {
-          sendConnMessage(channel.messages[i], connection);
+        for(var i = num - 1; i >= 0; i--) {
+          var message = channel.getMessageAtIndex(i);
+          if(message) {
+            sendConnMessage(message, connection);
+          }
         }
       }
 
