@@ -11,8 +11,8 @@ var pluginManager =  this.pluginManager = pm(this);
 var Channel = require("./channel").channel;
 var User = require('./user').User;
 var Auth = require('./auth').Auth;
-var Storage = require('./storage').Storage
-var Config = require("./config").Config
+var Storage = require('./storage').Storage;
+var Config = require("./config").Config;
 var _ = require('lodash');
 var jwtSecret = 'secretsss';
 
@@ -20,7 +20,7 @@ app.use(express.static(__dirname + '/client'));
 
 
 http.listen(3030, function() {
-  console.log("listening on 3030")
+  console.log("listening on 3030");
 });
 
 app.get("/", function(req, res) {
@@ -42,23 +42,23 @@ var request = chatter.request = function(options, callback) {
       try {
         callback(JSON.parse(body));
       } catch(e) {
-        console.log("Error caught during callback "+e)
+        console.log("Error caught during callback "+e);
         console.log(e.stack);
       }
-    })
+    });
   } catch(e) {
-    console.log("Error caught during request"+e)
+    console.log("Error caught during request"+e);
     console.log(e.stack);
   }
-}
+};
 
 
 //current operation is O(n) n is all users which can become costly operations
 var getOnlineUsers = chatter.getOnlineUsers = function() {
   return _.filter(users, function(user, key) {
     return user.isOnline();
-  })
-}
+  });
+};
 
 var send = chatter.send = function(name, data, user) {
   //If no user specified send to everyone;
@@ -80,10 +80,10 @@ var listenToAll = chatter.listenToAll = function(name, callback) {
   //Tell all sockets already connected to listen to this event
   connections.forEach(function(connection) {
     connection.socket.on(name, callback);
-  })
+  });
   sevents.push({name: name, callback: callback});
 
-}
+};
 
 var createChannel = chatter.createChannel = function(name) {
   if(channels[name] !== undefined) {
@@ -95,15 +95,15 @@ var createChannel = chatter.createChannel = function(name) {
     return;
   }
   channels[event.name] = new Channel(event.name);
-  storage.saveChannel(channels[event.name])
+  storage.saveChannel(channels[event.name]);
   sendChannels();
-}
+};
 
 var getChannel = chatter.getChannel = function(name) {
   if(channels[name]) {
     return channels[name];
   }
-}
+};
 
 var createUser = chatter.createUser = function(name) {
   if(users[name] !== undefined) {
@@ -117,19 +117,19 @@ var createUser = chatter.createUser = function(name) {
   users[event.user.name] = event.user;
   storage.saveUser(event.user);
   return event.user;
-}
+};
 
 var getUser = chatter.getUser = function(name) {
   return users[name];
-}
+};
 
 var loadConfig = chatter.loadConfig = function(f) {
   return new Config(f);
-}
+};
 
 var getPlugin = chatter.getPlugin = function(name) {
   return pluginManager.getPlugin(name);
-}
+};
 
 var setStorage = chatter.setStorage = function(newStorage) {
   if(newStorage instanceof Storage) {
@@ -140,9 +140,9 @@ var setStorage = chatter.setStorage = function(newStorage) {
     storage = newStorage;
     console.log("Using Storage system " + storage.name);
   } else {
-    throw "Storage system must extend Storage class"
+    throw "Storage system must extend Storage class";
   }
-}
+};
 
 setStorage(new Storage("default"));
 
@@ -158,13 +158,13 @@ var setAuth = chatter.setAuth = function(newAuth) {
     }
     newAuth.start();
     auth = newAuth;
-    console.log("Using Auth system " + auth.name)
+    console.log("Using Auth system " + auth.name);
   } else {
     throw "Auth System must inherit Auth class";
   }
-}
+};
 //default to empty permission system
-setAuth(new Auth("default"))
+setAuth(new Auth("default"));
 //give access to Auth system to chatter
 chatter.Auth = Auth;
 
@@ -194,7 +194,7 @@ var sendMessage = chatter.sendMessage = function(user, channel, text) {
     sendConnMessage(event.message, connections[i]);
   }
 
-}
+};
 
 //Send a message to a client connected as a user
 var sendConnMessage = function(message, conn) {
@@ -205,24 +205,24 @@ var sendConnMessage = function(message, conn) {
   //Clone message to allow for modifications
   var localMessage = JSON.parse(JSON.stringify(message));
 
-  var event = pluginManager.fireEvent("UserMessageSendEvent", {message: localMessage, username: conn.user.name})
+  var event = pluginManager.fireEvent("UserMessageSendEvent", {message: localMessage, username: conn.user.name});
   if(event.result === Result.deny) {
-    console.log("event was canceled!")
+    console.log("event was canceled!");
     return;
   }
-  conn.socket.emit('message', event.message)
-}
+  conn.socket.emit('message', event.message);
+};
 
 
 var sendChannels = function(socket) {
   if(socket) {
-    socket.emit("channels", {channels: channels})
+    socket.emit("channels", {channels: channels});
   } else {
     for(var i = 0; i < connections.length; i++) {
       sendChannels(connections[i].socket);
     }
   }
-}
+};
 
 
 //Listen for plugins finish loading events
@@ -235,21 +235,20 @@ pluginManager.registerEvent(null, "PluginsFinishedLoadingEvent", function(event)
     });
 
   });
-})
+});
 createChannel('general');
 createChannel('random');
-createUser('joe').name = "joe"
-createUser('chatterbot')
+createUser('joe').name = "joe";
+createUser('chatterbot');
 
 
 
 
 require('socketio-auth')(io, {
   authenticate: function (socket, data, callback) {
-    console.log("Event")
+    console.log("Event");
     var event = pluginManager.fireEvent("UserPreAuthenticateEvent", {data: data});
     if(event.result === Result.deny) {
-      console.log(event)
       return callback(new Error(event.errorMessage));
     }
 
@@ -263,7 +262,7 @@ require('socketio-auth')(io, {
       if(resultData.success) {
         return callback(null, resultData.profile);
       } else {
-        return callback(new Error(resultData.error))
+        return callback(new Error(resultData.error));
       }
 
     }
@@ -272,7 +271,7 @@ require('socketio-auth')(io, {
     var user = getUser(profile.username);
     if(!user) {
       console.log("Unable to find user from authed");
-      console.log("This is likely an error from auth not returning a username to match too. In the future this may result in disconnecting user")
+      console.log("This is likely an error from auth not returning a username to match too. In the future this may result in disconnecting user");
     }
     var connection = {user: null, socket: socket};
     socket.connection = connection;
@@ -295,7 +294,7 @@ require('socketio-auth')(io, {
     //Tell socket to listen to global events
     sevents.forEach(function(sevent) {
       socket.on(sevent.name, sevent.callback);
-    })
+    });
 
     //Listen for messages from socket
     socket.on('message', function(message) {
@@ -315,26 +314,26 @@ require('socketio-auth')(io, {
         }
       }
 
-    })
+    });
 
     socket.on('disconnect', function(data) {
       connection.user.setOnline(false);
       var event = pluginManager.fireEvent("UserDisconnectEvent", {user: connection.user});
       connection.socket.connection = null;
-      connections.splice(connection, 1)
-    })
+      connections.splice(connection, 1);
+    });
 
     socket.on('channels', function() {
       sendChannels(socket);
-    })
+    });
 
 
   }
-})
+});
 
 io.on('connection', function(socket) {
-  socket.emit("LoginFields", auth.clientLoginFields())
-  socket.emit("SignupFields", auth.clientSignupFields())
+  socket.emit("LoginFields", auth.clientLoginFields());
+  socket.emit("SignupFields", auth.clientSignupFields());
   socket.on('getPlugins', function(data, callback) {
     var fs = require("fs");
     fs.readdir("client/plugins", function(err, data) {
@@ -344,8 +343,8 @@ io.on('connection', function(socket) {
         obj[data[i]] = parsed;
       }
       socket.emit("getPlugins", obj);
-    })
-  })
+    });
+  });
 });
 
 
