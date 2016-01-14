@@ -302,7 +302,7 @@ var Messages = React.createClass({
   },
 
 
-  handleMessage(message) {
+  handleMessages(newMessages) {
     var self = this;
     var messages;
     if(self.state && self.state.messages) {
@@ -310,19 +310,22 @@ var Messages = React.createClass({
     } else {
       messages = [];
     }
-    var event = chatter.pluginManager.fireEvent("MessageRecievedEvent", {message: message});
-    if(event.result === Result.deny) {
-      console.log("Message was canceled");
-      return;
-    }
-    if(currentChannel === event.message.channel) {
-
-      var nextEvent = chatter.pluginManager.fireEvent("MessageShowEvent", {message: event.message});
-      if(nextEvent.result === Result.deny) {
+    for(var i = 0; i < newMessages.length; i++) {
+      var message = newMessages[i];
+      var event = chatter.pluginManager.fireEvent("MessageRecievedEvent", {message: message});
+      if(event.result === Result.deny) {
         console.log("Message was canceled");
         return;
       }
-      messages.push(nextEvent.message);
+      if(currentChannel === event.message.channel) {
+
+        var nextEvent = chatter.pluginManager.fireEvent("MessageShowEvent", {message: event.message});
+        if(nextEvent.result === Result.deny) {
+          console.log("Message was canceled");
+          return;
+        }
+        messages.push(nextEvent.message);
+      }
       self.setState({
         messages: messages
       });
@@ -339,12 +342,10 @@ var Messages = React.createClass({
       });
     });
 
-    socket.on("message", this.handleMessage);
-    socket.on('messages', function(messages) {
-      for(var i = 0; i < messages.length; i++) {
-        this.handleMessage(messages[i]);
-      }
+    socket.on("message", function(message) {
+      self.handleMessages([message]);
     });
+    socket.on('messages', this.handleMessages);
   },
   render() {
 
