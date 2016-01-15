@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 class Auth {
   constructor(name) {
     this.name = name;
@@ -14,6 +14,20 @@ class Auth {
 
   clientSignupFields() {
     return ["username"];
+  }
+
+  authSignup(data, done) {
+    console.log(data);
+    if(chatter.getUser(data.username)) {
+      done({success: false});
+    } else {
+      chatter.createUser(data.username);
+      done({success: true, username: data.username, profile: {username: data.username}});
+    }
+  }
+
+  authLogin(data, done) {
+    done({success: true, username: data.username, profile: {username: data.username}});
   }
 
   start() {

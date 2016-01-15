@@ -343,6 +343,15 @@ io.on('connection', function(socket) {
   socket.emit("SignupFields", auth.clientSignupFields());
   socket.on('getPlugins', function(data, callback) {
     var fs = require("fs");
+    if(!fs.existsSync("client/plugins")) {
+      try {
+        fs.mkdirSync("client/plugins");
+      } catch(e) {
+        //Plugin directory does not exists could not be created. Error out..
+        console.log("Plugin Dir could not be found or created");
+        throw new Error("Not plugin dir");
+      }
+    }
     fs.readdir("client/plugins", function(err, data) {
       var obj = {};
       for(var i = 0; i < data.length; i++) {

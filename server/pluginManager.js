@@ -74,6 +74,16 @@ class PluginManager {
 
     }
     var self = this;
+    //Check if dir exsits
+    if(!fs.existsSync("./plugins")) {
+      try {
+        fs.mkdirSync("./plugins");
+      } catch(e) {
+        //Plugin directory does not exists could not be created. Error out..
+        console.log("Plugin Dir could not be found or created");
+        throw new Error("Not plugin dir");
+      }
+    }
     fs.readdir("./plugins", function(err, dir) {
       //load plugins
       var toLoad = [];
