@@ -353,8 +353,8 @@ var Messages = React.createClass({
       var time = new Date(message.timeStamp).toLocaleTimeString().replace(/:\d+ /, ' ');
       return (
         <div key={message.id}>
-          <div> {time} </div>
-          <span>  {message.user}: </span> <div> {message.text} </div>
+          <div> <span> {message.user} </span>  <span> {time} </span> </div>
+           <span> {message.text} </span>
         </div>);
     });
     return (
