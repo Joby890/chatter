@@ -349,14 +349,18 @@ var Messages = React.createClass({
   },
   render() {
     var messages = this.state.messages.map(function(message) {
-      var event = chatter.pluginManager.fireEvent("MessageRenderEvent", {components: []});
+      var time = new Date(message.timeStamp).toLocaleTimeString().replace(/:\d+ /, ' ');
+      var event = chatter.pluginManager.fireEvent("MessageRenderEvent", {components: [], defaultUserMessage: true, defaultText: true, time: time, message: message});
       if(event.result === Result.deny) {
         console.log("Event was denyed");
         return;
       }
-      var time = new Date(message.timeStamp).toLocaleTimeString().replace(/:\d+ /, ' ');
-      event.components.push({weight: 3, component: <div> <span> {message.user} </span>  <span> {time} </span> </div>});
-      event.components.push({weight: 4, component: <span> {message.text} </span> });
+      if(event.defaultUserMessage) {
+        event.components.push({weight: 3, component: <span> {message.user}  {time} </span> });
+      }
+      if(event.defaultText) {
+        event.components.push({weight: 4, component: <div> {message.text} </div> });
+      }
       event.components.sort(function(a, b) {
         return a - b;
       });
