@@ -348,13 +348,27 @@ var Messages = React.createClass({
     socket.on('messages', this.handleMessages);
   },
   render() {
-
     var messages = this.state.messages.map(function(message) {
+      var event = chatter.pluginManager.fireEvent("MessageRenderEvent", {components: []});
+      if(event.result === Result.deny) {
+        console.log("Event was denyed");
+        return;
+      }
       var time = new Date(message.timeStamp).toLocaleTimeString().replace(/:\d+ /, ' ');
+      event.components.push({weight: 3, component: <div> <span> {message.user} </span>  <span> {time} </span> </div>});
+      event.components.push({weight: 4, component: <span> {message.text} </span> });
+      event.components.sort(function(a, b) {
+        return a - b;
+      });
+
+      var mapped = event.components.map(function(m) {
+        return m.component;
+      });
+
       return (
         <div key={message.id}>
-          <div> <span> {message.user} </span>  <span> {time} </span> </div>
-           <span> {message.text} </span>
+          {mapped}
+
         </div>);
     });
     return (
