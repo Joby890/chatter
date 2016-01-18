@@ -262,15 +262,14 @@ require('socketio-auth')(io, {
     }
     function done(resultData) {
       if(resultData.success) {
-        return callback(null, resultData.profile);
+        return callback(null, getUser(resultData.username));
       } else {
         return callback(new Error(resultData.error));
       }
 
     }
   },
-  postAuthenticate: function(socket, data, profile) {
-    var user = getUser(profile.username);
+  postAuthenticate: function(socket, data, user) {
     if(!user) {
       console.log("Unable to find user from authed");
       console.log("This is likely an error from auth not returning a username to match too. In the future this may result in disconnecting user");

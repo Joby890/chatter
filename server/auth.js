@@ -22,12 +22,12 @@ class Auth {
       done({success: false});
     } else {
       chatter.createUser(data.username);
-      done({success: true, username: data.username, profile: {username: data.username}});
+      done({success: true, username: data.username});
     }
   }
 
   authLogin(data, done) {
-    done({success: true, username: data.username, profile: {username: data.username}});
+    done({success: true, username: data.username});
   }
 
   start() {
