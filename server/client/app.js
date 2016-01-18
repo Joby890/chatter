@@ -140,7 +140,7 @@ var InternalPage = React.createClass({
     var page = this.props.children;
 
     var dropdownItems = page.options.map(function(o) {
-      return React.createElement(chatter.styles.MenuItem, {value: o.name, primaryText: o.name});
+      return React.createElement(chatter.styles.MenuItem, {key: o.name, value: o.name, primaryText: o.name});
     });
     if(page.canClose) {
       dropdownItems.push(React.createElement(chatter.styles.MenuItem, {value: "Close", primaryText: "Close"}));
@@ -191,9 +191,10 @@ var Panel = React.createClass({
       throw new Error("First prama needs to be a plugin or null value");
     }
     if(!(page instanceof Page)) {
-
       throw new Error("Second prama needs to be a page");
     }
+    //Generate an ID for each page for react to track
+    page.id = uuid();
     page.plugin = plugin;
     var pages = this.state.pages.concat(page);
     this.setState({
@@ -245,7 +246,7 @@ var Panel = React.createClass({
     }, this.props.style);
     var self = this;
     var pages = this.state.pages.map(function(page) {
-      return React.createElement(InternalPage, {close: self.removePage.bind(null, page)}, page);
+      return React.createElement(InternalPage, {key: page.id, close: self.removePage.bind(null, page)}, page);
       //return React.createElement(page.component, null);
     });
     return (
@@ -287,7 +288,7 @@ var ChannelList = React.createClass({
         console.log("ChannelRender event canceled");
         return;
       }
-      return (<div onClick={self.clickChannel.bind(self, key)}> {event.name} </div>);
+      return (<div key={event.name} onClick={self.clickChannel.bind(self, key)}> {event.name} </div>);
     });
     return (
       <div> {channels} </div>
@@ -356,15 +357,14 @@ var Messages = React.createClass({
         return;
       }
       if(event.defaultUserMessage) {
-        event.components.push({weight: 3, component: <span> {message.user}  {time} </span> });
+        event.components.push({weight: 3, component: <span key="nameTime">  {message.user}  {time} </span> });
       }
       if(event.defaultText) {
-        event.components.push({weight: 4, component: <div> {message.text} </div> });
+        event.components.push({weight: 4, component: <div key="messageText"> {message.text} </div> });
       }
       event.components.sort(function(a, b) {
         return a - b;
       });
-
       var mapped = event.components.map(function(m) {
         return m.component;
       });
