@@ -9,7 +9,7 @@
     }
 
     addMessage(message) {
-      var event = chatter.pluginManager.fireEvent("MessageAddEvent", {message: message});
+      var event = chatter.pluginManager.fireEvent("MessageAddEvent", {message: message, channel: this});
       if(event.result === event.Results.deny) {
         console.log("Canceled");
         return;
@@ -44,6 +44,10 @@
           return message;
         }
       }
+    }
+
+    mostRecent() {
+      return this.getMessageAtIndex(0);
     }
 
     removeMessage(id) {
