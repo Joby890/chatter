@@ -79,7 +79,7 @@ var sevents = [];
 var listenToAll = chatter.listenToAll = function(name, callback) {
   //Tell all sockets already connected to listen to this event
   connections.forEach(function(connection) {
-    connection.socket.on(name, callback);
+    connection.socket.on(name, callback.bind(this, connection.user));
   });
   sevents.push({name: name, callback: callback});
 
@@ -123,8 +123,23 @@ var getUser = chatter.getUser = function(name) {
   return users[name];
 };
 
-var loadConfig = chatter.loadConfig = function(f) {
-  return new Config(f);
+var configs = {};
+
+var loadConfig = chatter.getConfig =  chatter.loadConfig = function(plugin, f) {
+  var config = new Config(f);
+  configs[config] = plugin;
+  return config;
+};
+
+
+var unLoadConfig = chatter.unLoadConfig = function(config) {
+  delete configs[config];
+};
+
+var getActiveConfigs = chatter.getActiveConfigs = function(plugin) {
+  return _.reduce(configs, function(plugin, config) {
+    return plugin === plugin;
+  }, []);
 };
 
 var getPlugin = chatter.getPlugin = function(name) {
@@ -294,7 +309,7 @@ require('socketio-auth')(io, {
 
     //Tell socket to listen to global events
     sevents.forEach(function(sevent) {
-      socket.on(sevent.name, sevent.callback);
+      socket.on(sevent.name, sevent.callback.bind(this, socket.connection.user));
     });
 
     //Listen for messages from socket
@@ -370,3 +385,5 @@ function uuid() {
     return v.toString(16);
   });
 }
+
+console.log(chatter);

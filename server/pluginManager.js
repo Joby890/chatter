@@ -47,6 +47,9 @@ class PluginManager {
       plugin.onDisable && plugin.onDisable();
       plugin.setEnabled(false);
       this.unRegisterEvents(plugin);
+      _.each(chatter.getActiveConfigs(plugin), function(config) {
+        chatter.unLoadConfig(config);
+      });
     }
 
     this.getPlugin = function(name) {

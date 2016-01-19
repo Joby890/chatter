@@ -36,9 +36,10 @@ class Config {
 
   save() {
     if(!this.data) {
-      throw new Error('Unable to save null value to file')
+      throw new Error('Unable to save null value to file');
     }
-    fs.writeFile(f, JSON.stringify(this.data));
+    //fs.mkdirSync(this.f);
+    fs.writeFile(this.f, JSON.stringify(this.data, undefined, "\t"), function(){});
   }
 
 
