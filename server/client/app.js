@@ -129,14 +129,54 @@ var InternalPage = React.createClass({
   handleOption(e, index, value) {
     var page = this.props.children;
     if(page.options[index]) {
-      page.options[index].callback();
+      page.options[index].callback.call(page, this);
     } else {
       console.log("Closing page", page);
       this.props.close();
     }
   },
 
+  getInitialState() {
+    return {
+      modals: {},
+    };
+  },
+
+  componentDidMount() {
+    var modals = this.props.children.pages.reduce(function(obj, modal) {
+      obj[modal.id] = false;
+      return obj;
+    }, {});
+    this.setState({
+      modals: modals,
+    });
+  },
+
+  openModalPage(id) {
+    var event = chatter.pluginManager.fireEvent("ModalOpenEvent", {modal: this.props.children.getModalById(id)});
+    if(event.result === Result.deny) {
+      return;
+    }
+    this.state.modals[event.modal.id] = true;
+    this.setState({
+      modals: this.state.modals,
+    });
+  },
+
+
+  handleModelClose(id) {
+    var event = chatter.pluginManager.fireEvent("ModalCloseEvent", {modal: this.props.children.getModalById(id)});
+    if(event.result === Result.deny) {
+      return;
+    }
+    this.state.modals[id] = false;
+    this.setState({
+      modals: this.state.modals,
+    });
+  },
+
   render() {
+    var self = this;
     var page = this.props.children;
 
     var dropdownItems = page.options.map(function(o) {
@@ -146,7 +186,21 @@ var InternalPage = React.createClass({
       dropdownItems.push(React.createElement(chatter.styles.MenuItem, {value: "Close", primaryText: "Close"}));
     }
 
+    var modals = page.pages.map(function(modal) {
 
+      const actions = [
+        <chatter.styles.Button
+          label="Close"
+          primary={true}
+          onTouchTap={self.handleModelClose.bind(self, modal.id)} />,
+        ];
+
+      var inner = modal.components.map(function(comp) {
+        return comp.component;
+      });
+      var open = self.state.modals[modal.id] || false;
+      return React.createElement(chatter.styles.Modal, {key: modal.id, title: modal.name, actions:actions, modal: true, open: open}, inner);
+    });
 
     if(page) {
       if(!page.name) {
@@ -159,6 +213,7 @@ var InternalPage = React.createClass({
               dropdownItems
             ),
             React.createElement("span", null, page.name),
+            modals,
             React.createElement(page.component)
             )
           );
@@ -167,6 +222,7 @@ var InternalPage = React.createClass({
         return (
           React.createElement("div", null,
             React.createElement("span", null, page.name),
+            modals,
             React.createElement(page.component)
             )
           );
@@ -462,6 +518,22 @@ var App = React.createClass({
 });
 
 
+class Modal {
+  constructor(options) {
+    this.id = options.id;
+    this.name = options.name || "";
+
+    this.components = [];
+  }
+
+  addComponent(obj) {
+    this.components.push(obj);
+    this.components.sort(function(a,b) {
+      return a.weight - b.weight;
+    });
+  }
+
+}
 
 
 
@@ -475,7 +547,20 @@ class Page {
       this.options = this.options.concat(options);
     }
     this.canClose = !canClose;
+    this.pages = [];
   }
+
+  addModelPage(modal) {
+    this.pages.push(modal);
+  }
+
+  getModalById(id) {
+    return _.find(this.pages, function(modal) {
+      return modal.id === id;
+    })
+  }
+
+
 }
 
 window.Page = Page;
@@ -496,6 +581,7 @@ var styles = {
   DropDownMenu: matUi.DropDownMenu,
   //Input: reactMat.Input,
   MenuItem: matUi.MenuItem,
+  Modal: matUi.Dialog,
 };
 
 
@@ -526,7 +612,26 @@ var onceAuthed = function() {
   chatter.getPanel = app.getPanel;
 
   chatter.getPanel('left').addPage(null, new Page(1, ChannelList, 'Channels', [], true));
-  chatter.getPanel('center').addPage(null, new Page(1, Messages, null, [{name: "Channel Settings", callback: function() {console.log("test");}}], true));
+
+  //Messages Page
+
+  //Drop down Options
+  var DDOptions = [
+    {
+      name: "Channel Settings",
+      callback: function(internalPage) {
+        internalPage.openModalPage("settings");
+      }
+    }
+  ];
+  var messagesPage = new Page(1, Messages, null, DDOptions, true);
+
+  //Modal for settings
+  var channelSettings = new Modal({id: "settings", name: "Channel Settings"});
+  channelSettings.addComponent({weight: 1, component: <div> TEst </div>});
+  messagesPage.addModelPage(channelSettings);
+
+  chatter.getPanel('center').addPage(null, messagesPage);
   chatter.getPanel('bottom').addPage(null, new Page(2, SendMessage, null, [], true));
   //Let plugins know that we have offically authed with the server
   var event = chatter.pluginManager.fireEvent("AfterAuthEvent", {});
