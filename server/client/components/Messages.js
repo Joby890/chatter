@@ -1,5 +1,5 @@
 var React = require("react");
-module.exports = React.createClass({
+var Messages = React.createClass({
   getInitialState() {
     return {messages: []};
   },
@@ -85,3 +85,4 @@ module.exports = React.createClass({
   }
 
 });
+module.exports = Messages;

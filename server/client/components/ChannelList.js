@@ -1,5 +1,5 @@
 var React = require("react");
-module.exports = React.createClass({
+var ChannelList = React.createClass({
 
   getInitialState() {
     return {channels: []};
@@ -38,3 +38,4 @@ module.exports = React.createClass({
   }
 
 });
+module.exports = ChannelList;

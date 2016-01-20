@@ -1,48 +1,36 @@
-var hasAuthed = false;
-var loginPrompts;
-var signUpPromts;
-//listen for connect and get login fields and signup fields
-socket.on('connect', function() {
-  //If we already have the prompts no need to listen for them
-  console.log("connected");
-  if(!loginPrompts && !signUpPromts) {
-    socket.on('LoginFields', function(data) {
-      console.log("Got login fiels", data);
-      loginPrompts = data;
-      if(signUpPromts && !hasAuthed) {
-        gotFields();
-
-
-      }
-    });
-    socket.on('SignupFields', function(data) {
-      console.log("Got signup fiels", data);
-      signUpPromts = data;
-      if(loginPrompts && !hasAuthed) {
-        gotFields();
-      }
-    });
-
-  }
-});
-module.exports = React.createClass({
+var Login = React.createClass({
 
   getInitialState() {
-    return {login: true};
+    return {
+      formLogin: true,
+      signup: [],
+      login: [],
+    };
   },
   handleSubmit(e) {
     e.preventDefault();
   },
+
+  componentDidMount() {
+    var self = this;
+    socket.on("SLFields", function(obj) {
+      self.setState({
+        signup: obj.signup,
+        login: obj.login,
+      });
+    });
+  },
+
   sendLogin() {
-    var login = this.state.login;
+    var login = this.state.formLogin;
     var loginInfo = {type: (login ? "login" : "signup")};
     if(login) {
-      loginPrompts.forEach(function(key) {
+      this.state.login.forEach(function(key) {
         loginInfo[key] = this[key].value;
       });
 
     } else {
-      signUpPromts.forEach(function(key) {
+      this.state.signup.forEach(function(key) {
         loginInfo[key] = this[key].value;
       });
     }
@@ -59,12 +47,12 @@ module.exports = React.createClass({
 
   render() {
     var fields;
-    if(this.state.login) {
-      fields = loginPrompts.map(function(key) {
+    if(this.state.formLogin) {
+      fields = this.state.login.map(function(key) {
         return <div key={key}> {key} <input ref={(c) => this[key] = c} /></div>;
       });
     } else {
-      fields = signUpPromts.map(function(key) {
+      fields = this.state.signup.map(function(key) {
         return <div key={key}> {key} <input ref={(c) => this[key] = c} /></div>;
       });
     }
@@ -74,11 +62,12 @@ module.exports = React.createClass({
       <div>
         <form onSubmit={this.handleSubmit}>
           {fields}
-          <input type='submit' onClick={this.sendLogin} value={this.state.login ? "Login" : "Signup"}/>
+          <input type='submit' onClick={this.sendLogin} value={this.state.formLogin ? "Login" : "Signup"}/>
         </form>
-        <input type='button' onClick={this.swapForm} value={!this.state.login ? "Go to Login" : "Go to Signup"}/>
+        <input type='button' onClick={this.swapForm} value={!this.state.formLogin ? "Go to Login" : "Go to Signup"}/>
       </div>
     );
   }
 
 });
+module.exports = Login;

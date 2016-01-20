@@ -1,11 +1,15 @@
 var React = require("react");
 var InternalPage = require("./InternalPage");
-module.exports = React.createClass({
+var Panel = React.createClass({
 
   getInitialState() {
     return {
       pages: [],
     };
+  },
+
+  componentWillUnmount() {
+    console.log(this, " is unmouning!!");
   },
 
   addPage(plugin, page) {
@@ -62,6 +66,9 @@ module.exports = React.createClass({
   },
 
   render() {
+    if(!this.props.show) {
+      return <div> </div>;
+    }
     var style = _.extend({
       width: this.props.width,
       height: this.props.height,
@@ -82,3 +89,4 @@ module.exports = React.createClass({
     );
   }
 });
+module.exports = Panel;

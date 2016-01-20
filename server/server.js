@@ -353,8 +353,11 @@ require('socketio-auth')(io, {
 });
 
 io.on('connection', function(socket) {
-  socket.emit("LoginFields", auth.clientLoginFields());
-  socket.emit("SignupFields", auth.clientSignupFields());
+
+  socket.emit("SLFields", {login: auth.clientLoginFields(), signup: auth.clientSignupFields()});
+
+  // socket.emit("LoginFields", auth.clientLoginFields());
+  // socket.emit("SignupFields", auth.clientSignupFields());
   socket.on('getPlugins', function(data, callback) {
     var fs = require("fs");
     if(!fs.existsSync("client/plugins")) {

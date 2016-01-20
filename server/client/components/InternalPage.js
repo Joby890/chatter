@@ -1,5 +1,5 @@
 var React = require("react");
-module.exports= React.createClass({
+var InternalPage = React.createClass({
 
   handleOption(e, index, value) {
     var page = this.props.children;
@@ -108,3 +108,4 @@ module.exports= React.createClass({
 
   },
 });
+module.exports = InternalPage;

@@ -1,5 +1,5 @@
 var React = require("react");
-module.exports = React.createClass({
+var SendMessage = React.createClass({
   sendMessage: function(e) {
     socket.emit("message", {channel: chatter.getCurrentChannel(), text: this.textInput.value});
     this.textInput.value = "";
@@ -20,3 +20,4 @@ module.exports = React.createClass({
   }
 
 });
+module.exports = SendMessage;
