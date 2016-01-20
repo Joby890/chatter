@@ -196,7 +196,7 @@ var InternalPage = React.createClass({
         ];
 
       var inner = modal.components.map(function(comp) {
-        return comp.component;
+        return React.createElement(comp.component, {key: uuid()});
       });
       var open = self.state.modals[modal.id] || false;
       return React.createElement(chatter.styles.Modal, {key: modal.id, title: modal.name, actions:actions, modal: true, open: open}, inner);
@@ -249,13 +249,17 @@ var Panel = React.createClass({
     if(!(page instanceof Page)) {
       throw new Error("Second prama needs to be a page");
     }
-    //Generate an ID for each page for react to track
-    page.id = uuid();
+    // //Generate an ID for each page for react to track
+    // page.id = uuid();
     page.plugin = plugin;
     var pages = this.state.pages.concat(page);
     this.setState({
       pages: pages.sort(function(a,b) {return a.weight - b.weight;}),
     });
+  },
+
+  findPage(id) {
+    return _.find(this.state.pages, function(page) {return page.id === id;});
   },
 
   hasPage(page) {
@@ -469,7 +473,7 @@ var App = React.createClass({
     return{
       windowWidth: window.innerWidth,
       windowHeight: window.innerHeight,
-      messages : []
+      panels : {}
     };
   },
 
@@ -488,15 +492,7 @@ var App = React.createClass({
   },
 
   getPanel(name) {
-    if(name === "left") {
-      return this.left;
-    } else if(name === "center") {
-      return this.center;
-    } else if(name === "right") {
-      return this.right;
-    } else if(name === "bottom") {
-      return this.bottom;
-    }
+    return this.state.panels[name];
   },
   render() {
     var testStyles = {
@@ -508,10 +504,10 @@ var App = React.createClass({
 
     return (
       <div>
-        <Panel style={testStyles.panelLeft} top="0" left="0"  width="200" height={this.state.windowHeight} ref={(comp) => this.left = comp}>  </Panel>
-        <Panel style={testStyles.panelCenter} top="0" left="200"  width={this.state.windowWidth - 500 -200} height={this.state.windowHeight * 0.9} ref={(comp) => this.center = comp}>  </Panel>
-        <Panel style={testStyles.panelRight} top="0" left={this.state.windowWidth - 500}  width="500" height={this.state.windowHeight} ref={(comp) => this.right = comp}>  </Panel>
-        <Panel style={testStyles.panelBottom} top={this.state.windowHeight * 0.9} left="200" width={this.state.windowWidth - 500 -200} height={this.state.windowHeight * 0.1} ref={(comp) => this.bottom  = comp}> </Panel>
+        <Panel style={testStyles.panelLeft} top="0" left="0"  width="200" height={this.state.windowHeight} ref={(comp) => this.state.panels.left = comp}>  </Panel>
+        <Panel style={testStyles.panelCenter} top="0" left="200"  width={this.state.windowWidth - 500 -200} height={this.state.windowHeight * 0.9} ref={(comp) => this.state.panels.center = comp}>  </Panel>
+        <Panel style={testStyles.panelRight} top="0" left={this.state.windowWidth - 500}  width="500" height={this.state.windowHeight} ref={(comp) => this.state.panels.right = comp}>  </Panel>
+        <Panel style={testStyles.panelBottom} top={this.state.windowHeight * 0.9} left="200" width={this.state.windowWidth - 500 -200} height={this.state.windowHeight * 0.1} ref={(comp) => this.state.panels.bottom  = comp}> </Panel>
       </div>
     );
   }
@@ -538,7 +534,11 @@ class Modal {
 
 
 class Page {
-  constructor(weight, component, name, options, canClose) {
+  constructor(id, weight, component, name, options, canClose) {
+    if(typeof id !== "string") {
+      throw new Error("Page id needs to be a string");
+    }
+    this.id = id;
     this.name = name;
     this.weight = weight;
     this.component = component;
@@ -554,10 +554,14 @@ class Page {
     this.pages.push(modal);
   }
 
+  findModal(id) {
+    return _.find(this.pages, function(modal) {return modal.id === id;});
+  }
+
   getModalById(id) {
     return _.find(this.pages, function(modal) {
       return modal.id === id;
-    })
+    });
   }
 
 
@@ -611,7 +615,32 @@ var onceAuthed = function() {
   app = ReactDOM.render(<App />, document.getElementById("app"));
   chatter.getPanel = app.getPanel;
 
-  chatter.getPanel('left').addPage(null, new Page(1, ChannelList, 'Channels', [], true));
+
+  chatter.findPage = function(id) {
+    for(var key in app.state.panels) {
+      var found = app.state.panels[key].findPage(id);
+      if(found) {
+        return found;
+      }
+    }
+  };
+
+  chatter.findModal = function(id) {
+    var result;
+    _.each(app.state.panels, function(panel) {
+      //console.log(panel);
+        _.each(panel.state.pages, function(page) {
+          var found = page.findModal(id);
+          if(found && !result) {
+            result = found;
+          }
+        });
+    });
+    return result;
+
+  };
+
+  chatter.getPanel('left').addPage(null, new Page('channtls', 1, ChannelList, 'Channels', [], true));
 
   //Messages Page
 
@@ -620,19 +649,18 @@ var onceAuthed = function() {
     {
       name: "Channel Settings",
       callback: function(internalPage) {
-        internalPage.openModalPage("settings");
+        internalPage.openModalPage("channelsettings");
       }
     }
   ];
-  var messagesPage = new Page(1, Messages, null, DDOptions, true);
+  var messagesPage = new Page('messages', 1, Messages, null, DDOptions, true);
 
   //Modal for settings
-  var channelSettings = new Modal({id: "settings", name: "Channel Settings"});
-  channelSettings.addComponent({weight: 1, component: <div> TEst </div>});
+  var channelSettings = new Modal({id: "channelsettings", name: "Channel Settings"});
   messagesPage.addModelPage(channelSettings);
 
   chatter.getPanel('center').addPage(null, messagesPage);
-  chatter.getPanel('bottom').addPage(null, new Page(2, SendMessage, null, [], true));
+  chatter.getPanel('bottom').addPage(null, new Page('sendmessages', 2, SendMessage, null, [], true));
   //Let plugins know that we have offically authed with the server
   var event = chatter.pluginManager.fireEvent("AfterAuthEvent", {});
   //Once we have finished authed load messages from currernt channel
