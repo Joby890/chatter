@@ -3,6 +3,7 @@ class PluginManager {
   constructor(chatter, socket) {
     this.events = {};
     this.plugins = [];
+    this.next = 0;
     //var fs = require("fs");
     window.Plugin = Plugin;
 
@@ -103,6 +104,15 @@ class PluginManager {
     }
   }
 
+  unRegisterEvent(id) {
+    for(var key in this.events) {
+      var events = this.events[key];
+      this.events[key] = _.filter(events, function(e) {
+          return e.id !== id;
+      });
+    }
+  }
+
 
   registerEvent(plugin, name, callback, priority) {
     if( (! (plugin instanceof Plugin)) && plugin !== null ) {
@@ -115,11 +125,12 @@ class PluginManager {
       priority = 3;
     }
     var event = this.events[name];
-    event.push({priority: priority, callback: callback, plugin: plugin});
+    var id = ++this.next;
+    event.push({priority: priority, callback: callback, plugin: plugin, id: id});
     event.sort(function(a,b) {
       return a.priority - b.priority;
     })
-
+    return id;
   }
   fireEvent(name, args) {
     var event = this.events[name];

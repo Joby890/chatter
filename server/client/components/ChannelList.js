@@ -5,13 +5,19 @@ var ChannelList = React.createClass({
     return {channels: []};
   },
 
+  listenToChannels(data) {
+    this.setState({
+      channels: Object.keys(data.channels),
+    });
+  },
+
   componentDidMount() {
     var self = this;
-    socket.on('channels', function(data) {
-        self.setState({
-          channels: Object.keys(data.channels),
-        });
-    });
+    socket.on('channels', this.listenToChannels);
+  },
+
+  componentWillUnmount() {
+    socket.removeListener('channels', this.listenToChannels);
   },
   clickChannel: (name) => {
     var event = chatter.pluginManager.fireEvent("ChannelChangeEvent", {old: chatter.getCurrentChannel(), name: name});

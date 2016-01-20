@@ -28,7 +28,6 @@ var App = React.createClass({
 
 
     socket.on("connect", function() {
-      console.log("Con");
       self.setAuthed(false);
     });
 

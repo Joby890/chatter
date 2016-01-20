@@ -6,6 +6,9 @@ var Messages = React.createClass({
 
 
   handleMessages(newMessages) {
+    if(!(Array.isArray(newMessages))) {
+      newMessages = [newMessages];
+    }
     var self = this;
     var messages;
     if(self.state && self.state.messages) {
@@ -36,18 +39,23 @@ var Messages = React.createClass({
     }
   },
 
+  componentWillUnmount() {
+    chatter.pluginManager.unRegisterEvent(this.CCE);
+    socket.removeListener("message", this.handleMessages);
+    socket.removeListener("messages", this.handleMessages);
+  },
+
   componentDidMount() {
     var self = this;
-    chatter.pluginManager.registerEvent(null, "ChannelChangeEvent", function(event) {
+    var id = chatter.pluginManager.registerEvent(null, "ChannelChangeEvent", function(event) {
       console.log("Channel changing to: " + event.name);
       self.setState({
         messages: [],
       });
     });
-
-    socket.on("message", function(message) {
-      self.handleMessages([message]);
-    });
+    //Use id from registered event to be able to disable it later
+    self.CCE = id;
+    socket.on("message", this.handleMessages);
     socket.on('messages', this.handleMessages);
   },
   render() {
