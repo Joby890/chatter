@@ -41,7 +41,7 @@ var Login = React.createClass({
 
   swapForm() {
     this.setState({
-      login: !this.state.login,
+      formLogin: !this.state.formLogin,
     });
   },
 

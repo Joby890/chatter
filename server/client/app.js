@@ -29,6 +29,35 @@ window.chatter = {
   pluginManager: pluginManager(this, socket),
 };
 
+
+
+//Simple Sound Support
+var sounds = {};
+chatter.registerSound = function(name, audio) {
+  var event = chatter.pluginManager.fireEvent("SoundRegisterEvent", {name: name, audio: audio});
+  if(event.result === Result.deny) {
+    console.log("Canceled");
+    return;
+  }
+  sounds[event.name] = event.audio;
+};
+
+chatter.playSound = function(name) {
+  var sound = chatter.getSound(name);
+  if(!sound) {
+    return;
+  }
+  var event = chatter.pluginManager.fireEvent("PlaySoundEvent", {name: name, audio: sound});
+  if(event.result === Result.deny) {
+    return;
+  }
+  event.audio.play();
+};
+
+chatter.getSound = function(name) {
+  return sounds[name];
+};
+
 //Setup the styling to be used by the app.
 var matUi = require('material-ui');
 
