@@ -51,6 +51,7 @@ class PluginManager {
       _.each(chatter.getActiveConfigs(plugin), function(config) {
         chatter.unLoadConfig(config);
       });
+      chatter.scheduler.cancelTasks(plugin);
     }
 
     this.getPlugin = function(name) {

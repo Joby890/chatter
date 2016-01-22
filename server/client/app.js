@@ -29,6 +29,7 @@ window.chatter = {
   pluginManager: pluginManager(this, socket),
 };
 
+chatter.scheduler = new (require("./scheduler"))();
 
 
 //Simple Sound Support

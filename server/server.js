@@ -35,6 +35,8 @@ var connections = [];
 var auth;
 var storage;
 
+var scheduler = chatter.scheduler =  new (require("./client/scheduler"))();
+
 
 var request = chatter.request = function(options, callback) {
   try {

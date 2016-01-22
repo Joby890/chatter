@@ -60,6 +60,7 @@ class PluginManager {
       }
       console.log("Disabling " + plugin.name);
       plugin.onDisable && plugin.onDisable();
+      chatter.scheduler.cancelTasks(plugin);
       plugin.setEnabled(false);
       //UnRegister events on plugin
       this.unRegisterEvents(plugin);
