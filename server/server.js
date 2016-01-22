@@ -54,6 +54,9 @@ var request = chatter.request = function(options, callback) {
   }
 };
 
+var getUsers = chatter.getUsers = function() {
+  return Object.keys(users);
+};
 
 //current operation is O(n) n is all users which can become costly operations
 var getOnlineUsers = chatter.getOnlineUsers = function() {
@@ -295,6 +298,7 @@ require('socketio-auth')(io, {
     socket.connection = connection;
     socket.connection.user = user;
     connections.push(connection);
+    console.log(connections);
     var event = pluginManager.fireEvent("UserConnectEvent", {data: data, user: user});
     if(event.result === Result.deny) {
       //You shall not pass!!
@@ -343,7 +347,10 @@ require('socketio-auth')(io, {
       connection.user.setOnline(false);
       var event = pluginManager.fireEvent("UserDisconnectEvent", {user: connection.user});
       connection.socket.connection = null;
-      connections.splice(connection, 1);
+      connections = connections.filter(function(conn) {
+        return conn !== connection;
+      });
+      //connections.splice(connection, 1);
     });
 
     socket.on('channels', function() {

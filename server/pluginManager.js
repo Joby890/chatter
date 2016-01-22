@@ -123,7 +123,7 @@ class PluginManager {
 
   registerEvent(plugin, name, callback, priority) {
     if( (! (plugin instanceof Plugin)) && plugin !== null ) {
-      throw new Error("First prama needs to be a plugin or null value")
+      throw new Error("First prama needs to be a plugin or null value");
     }
     if(!this.events[name]) {
       this.events[name] = [];
@@ -133,10 +133,10 @@ class PluginManager {
     }
     var event = this.events[name];
     var id = ++this.next;
-    event.push({priority: priority, callback: callback, plugin: plugin, id: id});
+    event.push({priority: priority, callback: callback.bind(plugin), plugin: plugin, id: id});
     event.sort(function(a,b) {
       return a.priority - b.priority;
-    })
+    });
     return id;
 
   }
