@@ -140,22 +140,34 @@ class PluginManager {
     return id;
 
   }
-  fireEvent(name, args) {
+
+  fireEvent(name, args, finished) {
     var event = this.events[name];
     var e = new Event(name, args);
     e.Results = Result;
     if(event) {
-      for(var i = 0; i < event.length; i++) {
-        try {
-          event[i].callback(e);
-        } catch(e) {
-          console.log("Error caught while " + name + " was firing!")
-          console.log(e)
-          console.log(e.stack)
+      var index = -1;
+      var length = event.length;
+      var done = function() {
+        index++;
+        if(index !== length) {
+          if(event[index].callback.length === 1) {
+            event[index].callback(e);
+            done();
+          } else if (finished) { //If args is not 1 AND fireEvent callback is not undefined
+            event[index].callback(e, done);
+          } else {
+            //poternially still call event but not wait for done...... Not a bad idea...
+            console.log("Error firing "+name+"... Async event registed on a sync fire");
+          }
+        } else {
+          if(finished) {
+            finished(e);
+          }
         }
-      }
+      };
+      done();
     }
-
     return e;
 
   }
