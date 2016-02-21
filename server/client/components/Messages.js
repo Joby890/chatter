@@ -57,6 +57,8 @@ var Messages = React.createClass({
     self.CCE = id;
     socket.on("message", this.handleMessages);
     socket.on('messages', this.handleMessages);
+    //Once we mount send request to load all messages
+    socket.emit('getMessages', {channel: chatter.getCurrentChannel()});
   },
   render() {
     var messages = this.state.messages.map(function(message) {
